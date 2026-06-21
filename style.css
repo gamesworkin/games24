@@ -1,6 +1,3 @@
-/* ==========================================================================
-   ESTILOS ORIGINAIS DO SITE (MANTIDOS E INALTERADOS)
-   ========================================================================== */
 body {
     font-family: Arial, sans-serif;
     background-color: #121214;
@@ -66,7 +63,7 @@ button:hover {
     display: none !important;
 }
 
-/* Formulários de Autenticação */
+/* Formulários */
 #auth-screen {
     max-width: 400px;
     margin: 50px auto;
@@ -127,7 +124,7 @@ form input, form select {
     color: #00b4d8;
 }
 
-/* Seção do Catálogo */
+/* Catálogo */
 .local-rom-container {
     background-color: #1a1a1e;
     padding: 20px;
@@ -146,7 +143,6 @@ form input, form select {
     color: #8d8d99;
 }
 
-/* Estrutura Dinâmica do Catálogo */
 .category-block {
     margin-bottom: 40px;
 }
@@ -213,7 +209,7 @@ form input, form select {
     color: #8d8d99;
 }
 
-/* Área do Emulador */
+/* Emulador */
 .emulator-header {
     display: flex;
     justify-content: space-between;
@@ -229,7 +225,7 @@ form input, form select {
     height: 70vh;
 }
 
-/* Painel Admin */
+/* Admin */
 .admin-container {
     display: grid;
     grid-template-columns: 1fr 2fr;
@@ -292,7 +288,7 @@ form input, form select {
     font-size: 11px;
 }
 
-/* Modais Gerais do Sistema */
+/* Modais Gerais */
 .modal {
     position: fixed;
     top: 0;
@@ -325,12 +321,9 @@ form input, form select {
     background-color: #29292e;
 }
 
-
 /* ==========================================================================
-   ESTILOS NOVOS ADICIONADOS PARA O COLEGADO DE SLOTS DE SAVE (MANUAIS)
+   ADIÇÕES EXCLUSIVAS PARA O NOVO COMPONENTE DE SLOTS MANUAIS
    ========================================================================== */
-
-/* Elemento de Linha do Slot de Save */
 .save-slot-item {
     background-color: #121214;
     border: 1px solid #29292e;
@@ -341,7 +334,6 @@ form input, form select {
     align-items: center;
 }
 
-/* Área de Meta Textual do Slot */
 .slot-meta {
     display: flex;
     flex-direction: column;
@@ -359,7 +351,6 @@ form input, form select {
     color: #8d8d99;
 }
 
-/* Botões do Painel de Ações do Slot */
 .slot-actions {
     display: flex;
     gap: 6px;
@@ -394,7 +385,6 @@ form input, form select {
     color: #ffffff !important;
 }
 
-/* Scrollbar Customizada da Lista Interna de Saves */
 #cloud-saves-list::-webkit-scrollbar {
     width: 6px;
 }
