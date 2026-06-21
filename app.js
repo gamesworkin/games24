@@ -352,7 +352,7 @@ window.launchGame = function(system, romUrl, gameTitle, gameId = "local_rom") {
         }
     };
 
-    // OPERAÇÃO DE GRAVAÇÃO DO SAVE STATE NO SEU NÓ EXCLUSIVO
+    // OPERAÇÃO DE GRAVAÇÃO DO SAVE STATE COM PROTEÇÃO CONTRA CONFLITOS DE RENDERING/WEBGL
     window.EJS_onSaveState = async function(data) {
         if (!currentUser) {
             alert("Aviso: Faça login para salvar suas conquistas e fases nesta plataforma!");
@@ -363,22 +363,28 @@ window.launchGame = function(system, romUrl, gameTitle, gameId = "local_rom") {
             return;
         }
 
-        // Transforma o ArrayBuffer de dados físicos da RAM em String Base64 para aceitar no JSON
-        let binary = '';
-        const bytes = new Uint8Array(data);
-        const len = bytes.byteLength;
-        for (let i = 0; i < len; i++) {
-            binary += String.fromCharCode(bytes[i]);
-        }
-        const base64State = btoa(binary);
-
         try {
+            // Tratamento preventivo: se o emulador falhar na renderização e enviar dados inválidos
+            if (!data || data.byteLength === 0) {
+                console.warn("Aviso: O emulador enviou um buffer de save vazio ou corrompido devido às restrições do WebGL do navegador.");
+                return;
+            }
+
+            // Transforma o ArrayBuffer de dados físicos da RAM em String Base64 para aceitar no JSON
+            let binary = '';
+            const bytes = new Uint8Array(data);
+            const len = bytes.byteLength;
+            for (let i = 0; i < len; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            const base64State = btoa(binary);
+
             await set(ref(db, `users/${currentUser.uid}/saves/${gameId}`), {
                 state: base64State,
                 updatedAt: new Date().toISOString(),
                 gameTitle: gameTitle
             });
-            console.log("Estado de fase gravado no nó do Realtime Database!");
+            console.log("Estado de fase gravado com sucesso no nó do Realtime Database!");
         } catch (err) {
             console.error("Erro ao persistir save state no Realtime Database:", err);
         }
