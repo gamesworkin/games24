@@ -9,7 +9,6 @@
     <link rel="icon" href="fav.ico" type="image/x-icon">
 
     <link rel="stylesheet" href="style.css">
-    
     <script type="importmap">
         {
             "imports": {
@@ -27,20 +26,149 @@
         <nav class="nav-links">
             <a href="https://gamesworkin.blogspot.com" target="_blank" class="btn-home">🎮 Games Workin'</a>
             <a href="https://bombapatchworkin.blogspot.com" target="_blank" class="btn-home">⚽ Bomba Patch Workin'</a>
-            <a href="#" id="btn-client-area" class="btn-home hidden">🕹️ Minha Área</a>
-            <a href="#" id="btn-admin-area" class="btn-home hidden">⚙️ Painel Admin</a>
+            <a href="https://gamesworkin.github.io/areadojogador" target="_blank" class="btn-home">🕹️ Área do Jogador</a>
             
-            <button id="btn-login" class="btn-google">
-                <span>Entrar / Cadastrar</span>
-            </button>
+            <button id="btn-open-auth" class="btn-home">Entrar / Cadastrar</button>
 
             <div id="user-info" class="user-profile hidden">
-                <img id="user-avatar" src="" alt="Avatar" style="width:30px; height:30px; border-radius:50%;">
+                <img id="user-avatar" src="" alt="Avatar">
                 <span id="user-name"></span>
+                <button id="btn-admin-panel" class="btn-home hidden" style="background: var(--neon-cyan); color: #000; border-color: var(--neon-cyan);">Painel Admin</button>
                 <button id="btn-logout" class="btn-sm">Sair</button>
             </div>
         </nav>
     </header>
+
+    <div id="modal-auth" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-modal" id="close-auth-modal">✖</span>
+            
+            <div id="auth-login-section">
+                <h2>Acessar Plataforma</h2>
+                <div class="form-group">
+                    <label>E-mail:</label>
+                    <input type="email" id="login-email" class="input-style" placeholder="seuemail@exemplo.com">
+                </div>
+                <div class="form-group">
+                    <label>Senha:</label>
+                    <input type="password" id="login-senha" class="input-style" placeholder="******">
+                </div>
+                <button id="btn-execute-login" class="btn-play-now" style="margin-top: 10px;">Entrar ⚡</button>
+                
+                <p class="auth-switch-text"><a href="#" id="link-forgot-password">Esqueci minha senha</a></p>
+                
+                <hr style="border-color: rgba(255,255,255,0.1); margin: 15px 0;">
+                
+                <button id="btn-login-google" class="btn-google" style="width: 100%; justify-content: center;">
+                    <svg aria-hidden="true" class="google-icon" width="18" height="18" viewBox="0 0 18 18">
+                        <path fill="#4285F4" d="M17.64 9.2c0-.63-.06-1.25-.16-1.84H9v3.47h4.84c-.21 1.12-.84 2.07-1.8 2.72v2.26h2.92c1.71-1.57 2.68-3.88 2.68-6.61z"/>
+                        <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.19l-2.92-2.26c-.8.54-1.83.85-3.04.85-2.34 0-4.32-1.58-5.03-3.71H.95v2.33C2.44 15.99 5.47 18 9 18z"/>
+                        <path fill="#FBBC05" d="M3.97 10.69c-.18-.54-.28-1.12-.28-1.69s.1-1.15.28-1.69V4.98H.95A8.99 9.001 0 0 0 0 9c0 1.45.35 2.82.95 4.02l2.33-1.81l.69-.52z"/>
+                        <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35L15 2.4C13.46.97 11.41 0 9 0C5.47 0 2.44 2.01.95 4.98l3.02 2.33c.71-2.13 2.69-3.73 5.03-3.73z"/>
+                    </svg>
+                    <span>Entrar com Google</span>
+                </button>
+                <p class="auth-switch-text">Não tem uma conta? <a href="#" id="link-to-register">Cadastre-se aqui</a></p>
+            </div>
+
+            <div id="auth-register-section" class="hidden">
+                <h2>Criar Nova Conta</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Nome:</label>
+                        <input type="text" id="reg-nome" class="input-style" placeholder="Nome">
+                    </div>
+                    <div class="form-group">
+                        <label>Sobrenome:</label>
+                        <input type="text" id="reg-sobrenome" class="input-style" placeholder="Sobrenome">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Cidade:</label>
+                    <input type="text" id="reg-cidade" class="input-style" placeholder="Sua Cidade">
+                </div>
+                <div class="form-group">
+                    <label>E-mail:</label>
+                    <input type="email" id="reg-email" class="input-style" placeholder="seuemail@exemplo.com">
+                </div>
+                <div class="form-group">
+                    <label>Senha:</label>
+                    <input type="password" id="reg-senha" class="input-style" placeholder="Mínimo 6 dígitos">
+                </div>
+                <button id="btn-execute-register" class="btn-play-now" style="margin-top: 15px;">Finalizar Cadastro 🎮</button>
+                <p class="auth-switch-text">Já possui conta? <a href="#" id="link-to-login">Voltar ao Login</a></p>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-forgot" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-modal" id="close-forgot-modal">✖</span>
+            <h2>Recuperar Senha</h2>
+            <p style="color: var(--text-gray); font-size: 0.9rem; margin-bottom: 20px;">Insira seu e-mail cadastrado para receber as instruções de redefinição de acesso.</p>
+            <div class="form-group">
+                <label>E-mail de Cadastro:</label>
+                <input type="email" id="forgot-email" class="input-style" placeholder="seuemail@exemplo.com">
+            </div>
+            <button id="btn-execute-recovery" class="btn-play-now" style="margin-top: 15px;">Enviar Link de Recuperação 📬</button>
+        </div>
+    </div>
+
+    <div id="modal-admin" class="modal hidden">
+        <div class="modal-content" style="max-width: 850px;">
+            <span class="close-modal" id="close-admin-modal">✖</span>
+            <h2>Painel do Administrador (Controle Total)</h2>
+            
+            <div class="admin-tabs">
+                <button id="tab-add-game" class="btn-home">Cadastrar Novo Jogo</button>
+                <button id="tab-manage-users" class="btn-home" style="background: transparent;">Gerenciar Usuários / Exclusões</button>
+            </div>
+
+            <div id="admin-game-section" class="admin-tab-body">
+                <h3>Lançar Novo Card de Jogo</h3>
+                <div class="form-grid">
+                    <div class="form-group"><label>Título:</label><input type="text" id="g-title" class="input-style"></div>
+                    <div class="form-group"><label>Plataforma (Core):</label>
+                        <select id="g-platform" class="select-style" style="width:100%;">
+                            <option value="nes">Nintendo (NES)</option>
+                            <option value="snes">Super Nintendo (SNES)</option>
+                            <option value="gba">Game Boy Advance (GBA)</option>
+                            <option value="segaMD">Sega Mega Drive</option>
+                            <option value="n64">Nintendo 64</option>
+                            <option value="ps1">PlayStation 1 (PSX)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group"><label>Categoria:</label><input type="text" id="g-category" class="input-style" placeholder="Ex: Ação"></div>
+                    <div class="form-group"><label>Subcategoria:</label><input type="text" id="g-subcategory" class="input-style" placeholder="Ex: Plataforma"></div>
+                </div>
+                <div class="form-group"><label>URL da Imagem da Capa:</label><input type="text" id="g-cover" class="input-style" placeholder="https://..."></div>
+                <div class="form-group"><label>URL Direta do Arquivo ROM:</label><input type="text" id="g-rom" class="input-style" placeholder="https://..."></div>
+                <div class="form-group"><label>Descrição do Jogo:</label><textarea id="g-desc" class="input-style" rows="3"></textarea></div>
+                <button id="btn-save-new-game" class="btn-play-now" style="margin-top:15px;">Publicar Card no Catálogo 🚀</button>
+            </div>
+
+            <div id="admin-user-section" class="admin-tab-body hidden">
+                <h3>Solicitações de Exclusão e Usuários</h3>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>E-mail</th>
+                                <th>Cidade</th>
+                                <th>Status de Exclusão</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-users-table-body">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <main class="emulator-container hidden" id="emulator-screen">
         <div class="emulator-header">
@@ -54,8 +182,36 @@
 
     <div class="main-content" id="catalog-screen">
         
+        <section id="player-dashboard-section" class="upload-section hidden" style="border-style: solid; text-align: left;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--neon-purple); padding-bottom: 10px;">
+                <h2 style="margin:0;">🕹️ Área de Dados do Jogador</h2>
+                <button id="btn-request-delete-account" class="btn-sm">Solicitar Exclusão da Conta</button>
+            </div>
+            
+            <h3 style="color: var(--neon-cyan); margin-bottom: 10px;">⭐ Meus Favoritos</h3>
+            <div id="player-favorites-grid" class="grid-games" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px;">
+                <p style="color: var(--text-gray); font-size: 0.9rem;">Nenhum jogo favoritado ainda.</p>
+            </div>
+
+            <h3 style="color: var(--neon-cyan); margin-bottom: 10px;">💾 Gerenciador de Sachês (Saves em Nuvem Base64)</h3>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Identificador do Save</th>
+                            <th>Data do Arquivo</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="player-saves-table-body">
+                        <tr><td colspan="3" style="text-align:center; color: var(--text-gray);">Nenhum sachê salvo no banco.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        
         <section class="upload-section">
-            <h2>🕹️ Carregar sua ROM</h2>
+            <h2>🕹️ Carregar sua ROM Local</h2>
             <p>Selecione o console, escolha a ROM no seu dispositivo e jogue instantaneamente.</p>
             <div class="upload-box">
                 <div class="input-group">
@@ -63,34 +219,8 @@
                     <select id="system-select" class="select-style">
                         <option value="nes">Nintendo (NES)</option>
                         <option value="snes">Super Nintendo (SNES)</option>
-                        <option value="n64">Nintendo 64</option>
-                        <option value="gc">Nintendo GameCube</option>
-                        <option value="wii">Nintendo Wii</option>
-                        <option value="mastersystem">Sega Master System</option>
-                        <option value="segaMD">Sega Mega Drive / Genesis</option>
-                        <option value="sega-cd">Sega CD</option>
-                        <option value="saturn">Sega Saturn</option>
-                        <option value="dreamcast">Sega Dreamcast</option>
-                        <option value="ps1">PlayStation 1 (PSX)</option>
-                        <option value="ps2">PlayStation 2 (PS2)</option>
-                        <option value="atari2600">Atari 2600</option>
-                        <option value="atari7800">Atari 7800</option>
-                        <option value="3do">3DO</option>
-                        <option value="pce">PC Engine / TurboGrafx-16</option>
-                        <option value="gb">Game Boy (GB)</option>
-                        <option value="gbc">Game Boy Color (GBC)</option>
                         <option value="gba">Game Boy Advance (GBA)</option>
-                        <option value="nds">Nintendo DS</option>
-                        <option value="3ds">Nintendo 3DS</option>
-                        <option value="gamegear">Sega Game Gear</option>
-                        <option value="psp">PlayStation Portable (PSP)</option>
-                        <option value="wswan">WonderSwan / Color</option>
-                        <option value="lynx">Atari Lynx</option>
-                        <option value="ngp">Neo Geo Pocket / Color</option>
-                        <option value="arcade">Arcade (MAME / FBA)</option>
-                        <option value="neogeo">Neo Geo MVS/AES</option>
-                        <option value="dos">MS-DOS</option>
-                        <option value="amiga">Commodore Amiga</option>
+                        <option value="segaMD">Sega Mega Drive / Genesis</option>
                     </select>
                 </div>
                 
@@ -98,7 +228,7 @@
                     <label for="rom-upload" class="custom-file-upload">
                         📁 Escolher Arquivo ROM
                     </label>
-                    <input type="file" id="rom-upload" accept=".nes,.sfc,.smc,.gba,.gbc,.gb,.bin,.md,.smd,.sms,.gen,.n64,.iso,.img,.z64,.pbp,.cso,.prg,.d64,.adf">
+                    <input type="file" id="rom-upload" accept=".nes,.sfc,.smc,.gba,.gbc,.gb,.bin,.md,.smd,.sms">
                     <span id="file-name-display">Nenhum arquivo selecionado</span>
                 </div>
                 
@@ -106,417 +236,17 @@
             </div>
         </section>
 
-        <section id="admin-panel" class="admin-section hidden">
-            <hr>
-            <h2>⚙️ Painel do Administrador</h2>
-            
-            <div class="admin-box">
-                <h3>Adicionar / Editar Jogo</h3>
-                <form id="form-game">
-                    <input type="hidden" id="admin-game-id">
-                    <div class="input-group">
-                        <label>Título do Jogo:</label>
-                        <input type="text" id="admin-game-title" required class="select-style">
-                    </div>
-                    <div class="input-group">
-                        <label>Categoria (Console/ID):</label>
-                        <input type="text" id="admin-game-category" placeholder="ex: snes, gba" required class="select-style">
-                    </div>
-                    <div class="input-group">
-                        <label>Subcategoria:</label>
-                        <input type="text" id="admin-game-subcategory" placeholder="ex: Ação, RPG, Esportes" class="select-style">
-                    </div>
-                    <div class="input-group">
-                        <label>Descrição do Jogo:</label>
-                        <textarea id="admin-game-desc" rows="3" class="select-style" style="resize:vertical; font-family:inherit;"></textarea>
-                    </div>
-                    <div class="input-group">
-                        <label>Link da Thumb (Imagem):</label>
-                        <input type="url" id="admin-game-thumb" required class="select-style">
-                    </div>
-                    <div class="input-group">
-                        <label>Link do Jogo (ROM):</label>
-                        <input type="url" id="admin-game-url" required class="select-style">
-                    </div>
-                    <button type="submit" id="btn-save-game" class="btn-play-now">Salvar Jogo no Firebase 💾</button>
-                    <button type="button" id="btn-cancel-edit" class="btn-close hidden" style="margin-top:10px;">Cancelar Edição</button>
-                </form>
-            </div>
-
-            <div class="admin-box" style="margin-top: 20px;">
-                <h3>Gerenciamento de Cards (Categorias e Subcategorias)</h3>
-                <div style="margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
-                    <button id="btn-import-json" class="btn-sm">📥 Importar JSON</button>
-                    <button id="btn-export-json" class="btn-sm">📤 Exportar JSON Completo</button>
-                    <input type="file" id="input-import-json" accept=".json" style="display:none;">
-                </div>
-                <div style="overflow-x: auto;">
-                    <table class="admin-table" style="width:100%; border-collapse: collapse; margin-top:10px;">
-                        <thead>
-                            <tr style="background-color: #222; text-align: left;">
-                                <th style="padding: 10px;">Título</th>
-                                <th style="padding: 10px;">Categoria</th>
-                                <th style="padding: 10px;">Subcategoria</th>
-                                <th style="padding: 10px;">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="admin-games-list">
-                            </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="admin-box" style="margin-top: 20px;">
-                <h3>Gerenciamento de Usuários</h3>
-                <div style="overflow-x: auto;">
-                    <table class="admin-table" style="width:100%; border-collapse: collapse; margin-top:10px;">
-                        <thead>
-                            <tr style="background-color: #222; text-align: left;">
-                                <th style="padding: 10px;">Nome Completo</th>
-                                <th style="padding: 10px;">E-mail</th>
-                                <th style="padding: 10px;">Localização</th>
-                            </tr>
-                        </thead>
-                        <tbody id="admin-users-list">
-                            </tbody>
-                    </table>
-                </div>
-            </div>
-            <hr>
-        </section>
-
-        <section id="client-panel" class="client-section hidden">
-            <hr>
-            <h2>🕹️ Área do Jogador</h2>
-            
-            <div class="client-box" style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px;">
-                <div style="flex: 1; min-width: 250px;">
-                    <h3>Meus Dados</h3>
-                    <form id="form-profile">
-                        <div class="input-group">
-                            <label>Nome:</label>
-                            <input type="text" id="client-firstname" required class="select-style">
-                        </div>
-                        <div class="input-group">
-                            <label>Sobrenome:</label>
-                            <input type="text" id="client-lastname" required class="select-style">
-                        </div>
-                        <button type="submit" class="btn-play-now" style="padding: 8px 15px; font-size: 14px;">Atualizar Perfil</button>
-                    </form>
-                </div>
-                
-                <div style="flex: 1; min-width: 250px;">
-                    <h3>Meus Saves na Nuvem (Cloud Saves)</h3>
-                    <ul id="client-saves-list" style="list-style: none; padding: 0;">
-                        </ul>
-                </div>
-            </div>
-
+        <main class="catalog-container">
             <div class="section-title">
-                <h3>⭐ Meus Favoritos</h3>
-                <p>Seus cards de jogos salvos em sua conta</p>
-            </div>
-            <div class="grid-games" id="grid-favorites">
-                </div>
-            <hr>
-        </section>
-
-        <main class="catalog-container" id="main-catalog">
-            <div class="section-title">
-                <h2>🛸 Jogos populares</h2>
-                <p>Jogue os melhores clássicos dos consoles agora mesmo!</p>
+                <h2>🛸 Jogos Populares do Sistema</h2>
+                <p>Todos os títulos gerenciados e publicados pelo Administrador da plataforma.</p>
             </div>
 
-            <div class="grid-games" id="grid-catalog-games">
-                
-                <div class="game-card" onclick="launchGame('gba', 'https://raw.githubusercontent.com/gamesworkin/games/main/roms/DBAA.gba', 'Dragon Ball Advanced Adventure')">
-                   <div class="badge-system">GBA</div>
-                    <div class="cover-wrapper">
-                        <img src="https://sm.ign.com/ign_br/screenshot/default/dragon-ball-advance-adventure_pjja.png" alt="Dragon Ball Advanced Adventure">
-                    </div>
-                    <div class="game-info">
-                        <h3>Dragon Ball Advanced Adventure</h3>
-                        <p>Game Boy Advance</p>
-                    </div>
+            <div class="grid-games" id="live-catalog-grid">
                 </div>
-
-                <div class="game-card" onclick="launchGame('snes', 'https://raw.githubusercontent.com/gamesworkin/games/main/roms/SMW.sfc', 'Super Mario World')">
-                    <div class="badge-system">SNES</div>
-                    <div class="cover-wrapper">
-                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSRnF0-3qrJFTgBWVE5f_fChW8Hx1n9INIjXG0-lnGEZL0GufUXzpuNl66Y&s=10" alt="Super Mario World">
-                    </div>
-                    <div class="game-info">
-                        <h3>Super Mario World</h3>
-                        <p>Super Nintendo</p>
-                    </div>
-                </div>
-
-                <div class="game-card" onclick="launchGame('segaMD', 'https://raw.githubusercontent.com/gamesworkin/games/main/roms/MJM.smd', 'Michael Jacksons Moonwalker')">
-                    <div class="badge-system">MEGA DRIVE</div>
-                    <div class="cover-wrapper">
-                        <img src="https://jogoveio.com.br/wp-content/uploads/2020/07/moonwalker-jogoveio-2.gif" alt="Michael Jackson's Moonwalker">
-                    </div>
-                    <div class="game-info">
-                        <h3>Michael Jackson's Moonwalker</h3>
-                        <p>Sega Mega Drive</p>
-                    </div>
-                </div>
-                
-                <div class="game-card" onclick="launchGame('segaMD', 'https://raw.githubusercontent.com/gamesworkin/games/main/roms/SON.smd', 'Sonic The Hedgehog')">
-                    <div class="badge-system">MEGA DRIVE</div>
-                    <div class="cover-wrapper">
-                        <img src="https://drivemega.wordpress.com/wp-content/uploads/2017/12/93233-sonic-the-hedgehog-2-genesis-screenshot-well-what-are-you-waiting.gif" alt="Sonic The Hedgehog">
-                    </div>
-                    <div class="game-info">
-                        <h3>Sonic The Hedgehog</h3>
-                        <p>Sega Mega Drive</p>
-                    </div>
-                </div>
-                
-                <div class="game-card" onclick="launchGame('nes', 'https://raw.githubusercontent.com/gamesworkin/games/main/roms/SMB.nes', 'Super Mario Bros.')">
-                    <div class="badge-system">NES</div>
-                    <div class="cover-wrapper">
-                        <img src="https://i.pinimg.com/564x/21/e5/5d/21e55d2ca79015c5da4dbfc703489691.jpg" alt="Super Mario Bros.">
-                    </div>
-                    <div class="game-info">
-                        <h3>Super Mario Bros.</h3>
-                        <p>Nintendo</p>
-                    </div>
-                </div>
-
-                <div class="game-card" onclick="launchGame('snes', 'https://raw.githubusercontent.com/gamesworkin/games/main/roms/BOB.sfc', 'B.O.B.')">
-                <div class="badge-system">SNES</div>
-                    <div class="cover-wrapper">
-                        <img src="https://photos.enjoei.com.br/b-o-b-snes-65223415/800x800/czM6Ly9waG90b3MuZW5qb2VpLmNvbS5ici9wcm9kdWN0cy8xMzAzOTY2My9mNDlhODhkYzhjZGYzNzIxYmJlNGQxZDQ0NzFiY2NlMC5qcGc" alt="B.O.B.">
-                    </div>
-                    <div class="game-info">
-                        <h3>B.O.B.</h3>
-                        <p>Super Nintendo</p>
-                    </div>
-                </div>
-
-                <div class="game-card" onclick="launchGame('snes', 'https://raw.githubusercontent.com/gamesworkin/games/main/roms/SMAS.sfc', 'Super Mario All Stars')">
-                <div class="badge-system">SNES</div>
-                    <div class="cover-wrapper">
-                        <img src="https://i.guim.co.uk/img/static/sys-images/Technology/Pix/pictures/2010/12/6/1291636429404/Super-Mario-All-Stars-006.jpg?width=465&dpr=1&s=none&crop=none" alt="Super Mario All Stars">
-                    </div>
-                    <div class="game-info">
-                        <h3>Super Mario All Stars</h3>
-                        <p>Super Nintendo</p>
-                    </div>
-                </div>
-
-                <div class="game-card" onclick="launchGame('snes', 'https://raw.githubusercontent.com/gamesworkin/games/main/roms/MMPR.sfc', 'Mighty Morphin Power Rangers')">
-                <div class="badge-system">SNES</div>
-                    <div class="cover-wrapper">
-                        <img src="https://miro.medium.com/v2/resize:fit:1400/1*slRP7PFSRfh2trkHr-OEGg.jpeg" alt="Mighty Morphin Power Rangers">
-                    </div>
-                    <div class="game-info">
-                        <h3>Mighty Morphin Power Rangers</h3>
-                        <p>Super Nintendo</p>
-                    </div>
-                </div>
-
-                <div class="game-card" onclick="launchGame('snes', 'https://raw.githubusercontent.com/gamesworkin/games/main/roms/MMPRM.sfc', 'Mighty Morphin Power Rangers The Movie')">
-                <div class="badge-system">SNES</div>
-                    <div class="cover-wrapper">
-                        <img src="https://c8.alamy.com/comp/2BRKXK2/mighty-morphin-power-rangers-the-movie-snes-super-nintendo-editorial-use-only-2BRKXK2.jpg" alt="Mighty Morphin Power Rangers The Movie">
-                    </div>
-                    <div class="game-info">
-                        <h3>Mighty Morphin Power Rangers The Movie</h3>
-                        <p>Super Nintendo</p>
-                    </div>
-                </div>
-
-                <div class="game-card" onclick="launchGame('snes', 'https://raw.githubusercontent.com/gamesworkin/games/main/roms/SSFII.sfc', 'Street Fighter II')">
-                <div class="badge-system">SNES</div>
-                    <div class="cover-wrapper">
-                        <img src="https://www.researchgate.net/profile/Mark-Johnson-83/publication/312651324/figure/fig1/AS:616929593147393@1524098885875/screenshot-from-Street-Fighter-2-In-this-screenshot-Ryu-and-Ken-are-facing-off.png" alt="Street Fighter II">
-                    </div>
-                    <div class="game-info">
-                        <h3>Street Fighter II</h3>
-                        <p>Super Nintendo</p>
-                    </div>
-                </div>
-
-                <div class="game-card" onclick="launchGame('snes', 'https://raw.githubusercontent.com/gamesworkin/games/main/roms/DONK1.sfc', 'Donk Kong Country')">
-                <div class="badge-system">SNES</div>
-                    <div class="cover-wrapper">
-                        <img src="https://gamehall.com.br/wp-content/uploads/2011/04/Donkey_Kong_Country_SNES_ScreenShot31.jpg" alt="Donk Kong Country">
-                    </div>
-                    <div class="game-info">
-                        <h3>Donk Kong Country</h3>
-                        <p>Super Nintendo</p>
-                    </div>
-                </div>
-
-                <div class="game-card" onclick="launchGame('segaMD', 'https://raw.githubusercontent.com/gamesworkin/games/main/roms/ALA.smd', 'Aladdin')">
-                <div class="badge-system">MEGA DRIVE</div>
-                    <div class="cover-wrapper">
-                        <img src="https://www.gbhbl.com/wp-content/uploads/2018/09/Webp.net-resizeimage.png" alt="Aladdin">
-                    </div>
-                    <div class="game-info">
-                        <h3>Aladdin</h3>
-                        <p>Sega Mega Drive</p>
-                    </div>
-                </div>
-
-                <div class="game-card" onclick="launchGame('gba', 'https://raw.githubusercontent.com/gamesworkin/games/main/roms/MLSS.gba', 'Mario & Luigi - Superstar Saga')">
-                   <div class="badge-system">GBA</div>
-                    <div class="cover-wrapper">
-                        <img src="https://www.rpgfan.com/wp-content/uploads/2020/09/Mario-Luigi-Superstar-Saga-Screenshot-034.jpg" alt="Mario & Luigi - Superstar Saga">
-                    </div>
-                    <div class="game-info">
-                        <h3>Mario & Luigi - Superstar Saga</h3>
-                        <p>Game Boy Advance</p>
-                    </div>
-                </div>
-
-                <div class="game-card" onclick="launchGame('snes', 'https://raw.githubusercontent.com/gamesworkin/games/main/roms/BOMB.sfc', 'Super Bomberman')">
-                <div class="badge-system">SNES</div>
-                    <div class="cover-wrapper">
-                        <img src="https://psxbrasil.com.br/wp-content/uploads/2026/02/SUPER-BOMBERMAN-COLLECTION_20260211204438-1024x576.jpg" alt="Super Bomberman">
-                    </div>
-                    <div class="game-info">
-                        <h3>Super Bomberman</h3>
-                        <p>Super Nintendo</p>
-                    </div>
-                </div>
-
-            </div>
         </main>
     </div>
 
-    <div id="modal-login" class="custom-modal hidden">
-        <div class="modal-content-box">
-            <span class="close-modal-btn" onclick="toggleModal('modal-login', false)">✖</span>
-            <h3>Acessar sua Conta</h3>
-            <form id="form-auth-login">
-                <div class="input-group">
-                    <label>E-mail:</label>
-                    <input type="email" id="login-email" required class="select-style">
-                </div>
-                <div class="input-group">
-                    <label>Senha:</label>
-                    <input type="password" id="login-password" required class="select-style">
-                </div>
-                <button type="submit" class="btn-play-now" style="width: 100%; margin-bottom: 10px;">Entrar ⚡</button>
-            </form>
-            
-            <button id="btn-google-login-auth" class="btn-google" style="width: 100%; justify-content: center; margin-bottom: 15px;">
-                <svg aria-hidden="true" class="google-icon" width="18" height="18" viewBox="0 0 18 18" style="margin-right:8px;">
-                    <path fill="#4285F4" d="M17.64 9.2c0-.63-.06-1.25-.16-1.84H9v3.47h4.84c-.21 1.12-.84 2.07-1.8 2.72v2.26h2.92c1.71-1.57 2.68-3.88 2.68-6.61z"/>
-                    <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.19l-2.92-2.26c-.8.54-1.83.85-3.04.85-2.34 0-4.32-1.58-5.03-3.71H.95v2.33C2.44 15.99 5.47 18 9 18z"/>
-                    <path fill="#FBBC05" d="M3.97 10.69c-.18-.54-.28-1.12-.28-1.69s.1-1.15.28-1.69V4.98H.95A8.99 9.001 0 0 0 0 9c0 1.45.35 2.82.95 4.02l2.33-1.81l.69-.52z"/>
-                    <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35L15 2.4C13.46.97 11.41 0 9 0C5.47 0 2.44 2.01.95 4.98l3.02 2.33c.71-2.13 2.69-3.73 5.03-3.73z"/>
-                </svg>
-                <span>Entrar com o Google</span>
-            </button>
-
-            <div style="display: flex; justify-content: space-between; font-size: 13px;">
-                <a href="#" onclick="switchModal('modal-login', 'modal-reset-password')">Esqueceu a senha?</a>
-                <a href="#" onclick="switchModal('modal-login', 'modal-register')">Criar Conta</a>
-            </div>
-        </div>
-    </div>
-
-    <div id="modal-register" class="custom-modal hidden">
-        <div class="modal-content-box">
-            <span class="close-modal-btn" onclick="toggleModal('modal-register', false)">✖</span>
-            <h3>Criar Nova Conta</h3>
-            <form id="form-auth-register">
-                <div class="input-group-row" style="display:flex; gap:10px;">
-                    <div class="input-group" style="flex:1;">
-                        <label>Nome:</label>
-                        <input type="text" id="reg-firstname" required class="select-style">
-                    </div>
-                    <div class="input-group" style="flex:1;">
-                        <label>Sobrenome:</label>
-                        <input type="text" id="reg-lastname" required class="select-style">
-                    </div>
-                </div>
-                <div class="input-group">
-                    <label>Cidade:</label>
-                    <input type="text" id="reg-city" required class="select-style">
-                </div>
-                <div class="input-group">
-                    <label>Estado:</label>
-                    <select id="reg-state" required class="select-style">
-                        <option value="">Selecione...</option>
-                        <option value="AC">Acre</option><option value="AL">Alagoas</option><option value="AP">Amapá</option>
-                        <option value="AM">Amazonas</option><option value="BA">Bahia</option><option value="CE">Ceará</option>
-                        <option value="DF">Distrito Federal</option><option value="ES">Espírito Santo</option><option value="GO">Goiás</option>
-                        <option value="MA">Maranhão</option><option value="MT">Mato Grosso</option><option value="MS">Mato Grosso do Sul</option>
-                        <option value="MG">Minas Gerais</option><option value="PA">Pará</option><option value="PB">Paraíba</option>
-                        <option value="PR">Paraná</option><option value="PE">Pernambuco</option><option value="PI">Piauí</option>
-                        <option value="RJ">Rio de Janeiro</option><option value="RN">Rio Grande do Norte</option><option value="RS">Rio Grande do Sul</option>
-                        <option value="RO">Rondônia</option><option value="RR">Roraima</option><option value="SC">Santa Catarina</option>
-                        <option value="SP">São Paulo</option><option value="SE">Sergipe</option><option value="TO">Tocantins</option>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label>E-mail:</label>
-                    <input type="email" id="reg-email" required class="select-style">
-                </div>
-                <div class="input-group">
-                    <label>Senha:</label>
-                    <input type="password" id="reg-password" placeholder="Mínimo 6 caracteres" required class="select-style">
-                </div>
-                <button type="submit" class="btn-play-now" style="width: 100%; margin-top: 5px;">Cadastrar Conta 🚀</button>
-            </form>
-            <div style="text-align: center; margin-top: 15px; font-size: 13px;">
-                <a href="#" onclick="switchModal('modal-register', 'modal-login')">Já tem conta? Faça Login</a>
-            </div>
-        </div>
-    </div>
-
-    <div id="modal-reset-password" class="custom-modal hidden">
-        <div class="modal-content-box">
-            <span class="close-modal-btn" onclick="toggleModal('modal-reset-password', false)">✖</span>
-            <h3>Redefinir Senha</h3>
-            <p style="font-size: 13px; margin-bottom: 15px; color: #aaa;">Insira seu e-mail abaixo. Enviaremos um link para você cadastrar uma nova senha.</p>
-            <form id="form-auth-reset">
-                <div class="input-group">
-                    <label>E-mail Cadastrado:</label>
-                    <input type="email" id="reset-email" required class="select-style">
-                </div>
-                <button type="submit" class="btn-play-now" style="width: 100%; margin-top: 5px;">Enviar E-mail de Redefinição 📬</button>
-            </form>
-            <div style="text-align: center; margin-top: 15px; font-size: 13px;">
-                <a href="#" onclick="switchModal('modal-reset-password', 'modal-login')">Voltar para o Login</a>
-            </div>
-        </div>
-    </div>
-
-    <div id="modal-save-state" class="custom-modal hidden">
-        <div class="modal-content-box">
-            <h3>💾 Salvar Progresso na Nuvem</h3>
-            <p style="font-size:13px; color:#aaa;">Dê um nome ou descrição para identificar este ponto do jogo.</p>
-            <form id="form-save-state">
-                <div class="input-group">
-                    <label>Nome do Save:</label>
-                    <input type="text" id="save-state-name" placeholder="Ex: Chefe da fase 3 / Antes do castelo" required class="select-style">
-                </div>
-                <button type="submit" class="btn-play-now" style="width:100%;">Salvar no Firebase ☁️</button>
-                <button type="button" onclick="toggleModal('modal-save-state', false)" class="btn-close" style="width:100%; margin-top:10px; border:none; height:40px;">Cancelar</button>
-            </form>
-        </div>
-    </div>
-
     <script type="module" src="app.js"></script>
-
-    <script>
-        function toggleModal(modalId, show) {
-            const modal = document.getElementById(modalId);
-            if(modal) {
-                if(show) modal.classList.remove('hidden');
-                else modal.classList.add('hidden');
-            }
-        }
-        function switchModal(currentId, targetId) {
-            toggleModal(currentId, false);
-            toggleModal(targetId, true);
-        }
-    </script>
 </body>
 </html>
