@@ -3,275 +3,158 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Retro Gaming Nostalgia</title>
-    <!-- FontAwesome para os Ícones -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Plataforma de Jogos Antigos</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-    <!-- BARRA DE NAVEGAÇÃO SUPERIOR -->
-    <header class="navbar">
-        <div class="nav-container">
-            <div class="logo">
-                <i class="fa-solid fa-gamepad-controller animate-logo"></i>
-                <span>Retro<span>Zone</span></span>
+    <header>
+        <div class="logo">Meu Catálogo de Jogos</div>
+        <div class="auth-controls">
+            <button id="btn-nav-auth">Entrar/Cadastrar</button>
+            <div id="user-info" class="hidden">
+                <span id="user-badge" class="badge">User</span>
+                <span id="user-name"></span>
+                <button id="btn-logout">Sair</button>
             </div>
-            <nav class="nav-controls">
-                <button id="btn-nav-auth" class="btn-primary"><i class="fa-solid fa-right-to-bracket"></i> Entrar / Cadastrar</button>
-                <div id="user-info" class="user-profile hidden">
-                    <span id="user-badge" class="badge">User</span>
-                    <span id="user-name">Jogador</span>
-                    <button id="btn-logout" class="btn-danger-sm"><i class="fa-solid fa-power-off"></i> Sair</button>
-                </div>
-            </nav>
         </div>
     </header>
 
-    <main class="container">
-
-        <!-- TELA 1: TELA DE AUTENTICAÇÃO (LOGIN / CADASTRO) -->
-        <section id="auth-screen" class="auth-card hidden">
-            <div class="auth-tabs">
-                <button id="tab-login" class="tab-btn active">Acessar Conta</button>
-                <button id="tab-register" class="tab-btn">Nova Conta</button>
+    <main>
+        <section id="auth-screen" class="hidden">
+            <div class="tabs">
+                <button id="tab-login" class="active">Login</button>
+                <button id="tab-register">Cadastro</button>
             </div>
-
-            <!-- Formulário de Login -->
-            <form id="form-login" class="auth-form">
-                <div class="input-group">
-                    <label for="login-email">Endereço de E-mail</label>
-                    <input type="email" id="login-email" placeholder="exemplo@email.com" required>
-                </div>
-                <div class="input-group">
-                    <label for="login-password">Sua Senha</label>
-                    <input type="password" id="login-password" placeholder="••••••••" required>
-                </div>
-                <div class="auth-actions">
-                    <a href="#" id="link-forgot" class="forgot-link">Esqueceu a senha?</a>
-                    <div class="btn-group-row">
-                        <button type="button" id="btn-cancel-auth" class="btn-secondary">Voltar</button>
-                        <button type="submit" class="btn-success">Entrar <i class="fa-solid fa-chevron-right"></i></button>
-                    </div>
+            
+            <form id="form-login">
+                <input type="email" id="login-email" placeholder="E-mail" required>
+                <input type="password" id="login-password" placeholder="Senha" required>
+                <a href="#" id="link-forgot">Esqueci a senha</a>
+                <div class="form-buttons">
+                    <button type="button" id="btn-cancel-auth">Cancelar</button>
+                    <button type="submit">Entrar</button>
                 </div>
             </form>
 
-            <!-- Formulário de Registro -->
-            <form id="form-register" class="auth-form hidden">
-                <div class="form-row-2">
-                    <div class="input-group">
-                        <label for="reg-name">Nome</label>
-                        <input type="text" id="reg-name" placeholder="João" required>
-                    </div>
-                    <div class="input-group">
-                        <label for="reg-lastname">Sobrenome</label>
-                        <input type="text" id="reg-lastname" placeholder="Silva" required>
-                    </div>
-                </div>
-                <div class="input-group">
-                    <label for="reg-email">E-mail (Domínios Permitidos)</label>
-                    <input type="email" id="reg-email" placeholder="seu-email@gmail.com" required>
-                </div>
-                <div class="input-group">
-                    <label for="reg-password">Senha de Acesso</label>
-                    <input type="password" id="reg-password" placeholder="Mínimo 6 caracteres" minlength="6" required>
-                </div>
-                <div class="btn-group-row justify-end">
-                    <button type="button" class="btn-secondary CloseAuthBtn">Voltar</button>
-                    <button type="submit" class="btn-primary">Criar Minha Conta <i class="fa-solid fa-user-plus"></i></button>
+            <form id="form-register" class="hidden">
+                <input type="text" id="reg-name" placeholder="Nome" required>
+                <input type="text" id="reg-lastname" placeholder="Sobrenome" required>
+                <input type="email" id="reg-email" placeholder="E-mail" required>
+                <input type="password" id="reg-password" placeholder="Senha (mínimo 6 caracteres)" minlength="6" required>
+                <div class="form-buttons">
+                    <button type="button" class="CloseAuthBtn">Cancelar</button>
+                    <button type="submit">Cadastrar</button>
                 </div>
             </form>
         </section>
 
-
-        <!-- TELA 2: CATÁLOGO DINÂMICO E CARREGADOR LOCAL -->
         <section id="catalog-screen">
-            
-            <!-- Carregador Manual de ROMs Locais -->
-            <div class="local-uploader-card">
-                <div class="uploader-header">
-                    <h2><i class="fa-solid fa-folder-open"></i> Executar ROM Local (Do seu Aparelho)</h2>
-                    <p>Carregue um arquivo do seu armazenamento para rodar diretamente na memória sem salvar no servidor.</p>
-                </div>
-                <div class="uploader-controls">
-                    <div class="select-wrapper">
-                        <label for="system-select">Console Alvo</label>
-                        <select id="system-select">
-                            <option value="nes">Nintendo (NES)</option>
-                            <option value="snes">Super Nintendo (SNES)</option>
-                            <option value="gba">Game Boy Advance (GBA)</option>
-                            <option value="gbc">Game Boy Color (GBC)</option>
-                            <option value="segaMD">Mega Drive / Sega Genesis</option>
-                        </select>
-                    </div>
-                    <div class="file-input-wrapper">
-                        <label for="rom-upload" class="btn-file">
-                            <i class="fa-solid fa-file-zipper"></i> Escolher Arquivo ROM
-                        </label>
-                        <input type="file" id="rom-upload" accept=".nes,.smc,.sfc,.gba,.gbc,.gb,.smd,.gen,.md,.sms,.zip">
-                        <span id="file-name-display" class="file-name">Nenhum arquivo selecionado</span>
-                    </div>
-                    <button onclick="uploadAndPlay()" class="btn-cyan-run"><i class="fa-solid fa-bolt"></i> Iniciar Jogo</button>
-                </div>
+            <div class="local-rom-container">
+                <h3>Jogar ROM Local</h3>
+                <select id="system-select">
+                    <option value="nes">NES (Nintendo)</option>
+                    <option value="snes">SNES (Super Nintendo)</option>
+                    <option value="gba">GBA (Game Boy Advance)</option>
+                    <option value="gbc">GBC (Game Boy Color)</option>
+                    <option value="segaMD">Mega Drive</option>
+                </select>
+                <input type="file" id="rom-upload" accept=".nes,.smc,.sfc,.gba,.gbc,.gb,.smd,.gen,.md,.sms,.zip">
+                <span id="file-name-display">Nenhum arquivo selecionado</span>
+                <button onclick="uploadAndPlay()">Jogar ROM Selecionada</button>
             </div>
 
-            <!-- Área Onde o JavaScript renderizará as Categorias e Subcategorias do Firebase -->
             <div id="dynamic-catalog">
-                <div class="loading-placeholder">
-                    <i class="fa-solid fa-spinner animate-spin"></i>
-                    <p>Sincronizando banco de dados de jogos...</p>
                 </div>
-            </div>
         </section>
 
-
-        <!-- TELA 3: CONTAINER DO EMULADOR COM INTERFACE DE CONTROLE DE SAVE -->
         <section id="emulator-screen" class="hidden">
-            <div class="emulator-top-bar">
-                <h2 id="playing-title">Jogando: Carregando...</h2>
-                <div class="emu-actions-group">
-                    <!-- BOTÕES NOVOS: Menu de gerenciamento manual de Saves -->
-                    <button id="btn-open-saves-menu" class="btn-save-manager"><i class="fa-solid fa-floppy-disk"></i> Gerenciar Saves (Nuvem)</button>
-                    <button onclick="closeEmulator()" class="btn-danger"><i class="fa-solid fa-circle-xmark"></i> Fechar Jogo</button>
+            <div class="emulator-header">
+                <h2 id="playing-title">Jogando: </h2>
+                <div class="emulator-controls-buttons">
+                    <button id="btn-open-saves-menu" style="background-color: #ff9f43; color: white; padding: 5px 10px; border-radius: 4px; margin-right: 10px;">Gerenciar Saves</button>
+                    <button onclick="closeEmulator()">Fechar Jogo</button>
                 </div>
             </div>
-            
-            <!-- Wrapper Alvo onde o Script do EmulatorJS montará a viewport e os botões virtuais -->
             <div id="player-wrapper-target"></div>
         </section>
 
-
-        <!-- TELA 4: PAINEL ADMINISTRATIVO (SÓ ATIVA SE FOR LOGADO COMO ADMIN) -->
-        <section id="admin-panel" class="admin-wrapper card-dark hidden">
-            <div class="admin-header">
-                <h2><i class="fa-solid fa-user-shield"></i> Central do Administrador</h2>
-                <p>Gerencie títulos do catálogo de mídias, backups em lote e usuários online.</p>
-            </div>
-
-            <div class="admin-grid">
-                <!-- Formulário de Cadastro/Edição de Jogos -->
-                <form id="form-admin-game" class="admin-form-box">
-                    <h3>Formulário de Mídia</h3>
+        <section id="admin-panel" class="hidden">
+            <h2>Painel do Administrador</h2>
+            <div class="admin-container">
+                <form id="form-admin-game">
                     <input type="hidden" id="admin-game-id">
-                    
-                    <div class="input-group">
-                        <label for="admin-category">Categoria Principal</label>
-                        <input type="text" id="admin-category" placeholder="Ex: Nintendo, Sega" required>
-                    </div>
-                    <div class="input-group">
-                        <label for="admin-subcategory">Subcategoria / Console</label>
-                        <input type="text" id="admin-subcategory" placeholder="Ex: Super Nintendo, Gameboy Advance" required>
-                    </div>
-                    <div class="input-group">
-                        <label for="admin-system-core">Core do Motor (EmulatorJS)</label>
-                        <select id="admin-system-core">
-                            <option value="nes">nes (Nintendo Entertainment System)</option>
-                            <option value="snes">snes (Super Nintendo)</option>
-                            <option value="gba">gba (Game Boy Advance)</option>
-                            <option value="gbc">gbc (Game Boy Color)</option>
-                            <option value="segaMD">segaMD (Mega Drive / Genesis)</option>
-                        </select>
-                    </div>
-                    <div class="input-group">
-                        <label for="admin-game-title">Título do Jogo</label>
-                        <input type="text" id="admin-game-title" placeholder="Ex: Super Mario World" required>
-                    </div>
-                    <div class="input-group">
-                        <label for="admin-game-cover">URL da Imagem de Capa</label>
-                        <input type="url" id="admin-game-cover" placeholder="https://link-da-imagem.com/capa.jpg" required>
-                    </div>
-                    <div class="input-group">
-                        <label for="admin-game-url">URL Direta do Arquivo ROM</label>
-                        <input type="url" id="admin-game-url" placeholder="https://link-do-servidor.com/rom.zip" required>
-                    </div>
-
-                    <div class="btn-group-row">
-                        <button type="button" id="btn-cancel-edit" class="btn-secondary hidden">Cancelar Edição</button>
-                        <button type="submit" id="btn-save-game" class="btn-primary">Salvar Mídia 💾</button>
-                    </div>
+                    <input type="text" id="admin-category" placeholder="Categoria (ex: Nintendo)" required>
+                    <input type="text" id="admin-subcategory" placeholder="Subcategoria (ex: Super Nintendo)" required>
+                    <select id="admin-system-core">
+                        <option value="nes">nes (NES)</option>
+                        <option value="snes">snes (Super Nintendo)</option>
+                        <option value="gba">gba (GBA)</option>
+                        <option value="gbc">gbc (GBC)</option>
+                        <option value="segaMD">segaMD (Mega Drive)</option>
+                    </select>
+                    <input type="text" id="admin-game-title" placeholder="Título do Jogo" required>
+                    <input type="url" id="admin-game-cover" placeholder="URL da Capa" required>
+                    <input type="url" id="admin-game-url" placeholder="URL da ROM" required>
+                    <button type="submit" id="btn-save-game">Salvar Jogo</button>
+                    <button type="button" id="btn-cancel-edit" class="hidden">Cancelar Edição</button>
                 </form>
 
-                <!-- Área de Backups e Utilitários -->
-                <div class="admin-util-box">
-                    <h3>Manutenção de Dados</h3>
-                    <p>Exporte todas as configurações estruturadas do banco de dados de mídias para um arquivo local ou restaure a partir de um JSON de segurança.</p>
-                    <div class="btn-stack">
-                        <button type="button" id="btn-export-json" class="btn-cyan-outline"><i class="fa-solid fa-download"></i> Exportar JSON Completo</button>
-                        <label for="btn-import-json" class="btn-purple-outline"><i class="fa-solid fa-upload"></i> Importar / Restaurar Banco</label>
-                        <input type="file" id="btn-import-json" accept=".json" style="display: none;">
-                    </div>
-
-                    <h3 style="margin-top: 30px;">Jogadores Monitorados</h3>
-                    <div class="table-scroll">
-                        <table class="admin-table">
-                            <thead>
-                                <tr>
-                                    <th>Usuário</th>
-                                    <th>E-mail</th>
-                                    <th>Atividade Atual</th>
-                                    <th>Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="admin-users-list">
-                                <!-- Preenchido dinamicamente via JS -->
+                <div class="admin-tools">
+                    <h3>Ferramentas de Backup</h3>
+                    <button id="btn-export-json">Exportar Catálogo (JSON)</button>
+                    <label for="btn-import-json" class="custom-file-upload">Importar Catálogo (JSON)</label>
+                    <input type="file" id="btn-import-json" accept=".json">
+                    
+                    <h3>Jogadores Online / Monitoramento</h3>
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>E-mail</th>
+                                <th>Jogando Atualmente</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-users-list">
                             </tbody>
-                        </table>
-                    </div>
+                    </table>
                 </div>
             </div>
         </section>
-
     </main>
 
-    <!-- ========================================== -->
-    <!-- MODAL 1: REDEFINIÇÃO DE SENHA (FORGOT)     -->
-    <!-- ========================================== -->
-    <div id="modal-forgot" class="modal-overlay hidden">
-        <div class="modal-card">
-            <h3>Recuperar Acesso</h3>
-            <p>Insira seu e-mail cadastrado. Enviaremos as instruções de alteração de senha imediatamente.</p>
+    <div id="modal-forgot" class="modal hidden">
+        <div class="modal-content">
+            <h3>Recuperar Senha</h3>
             <form id="form-forgot">
-                <div class="input-group">
-                    <input type="email" id="forgot-email" placeholder="seuemail@provedor.com" required>
-                </div>
-                <div class="btn-group-row justify-end">
-                    <button type="button" id="btn-close-forgot" class="btn-secondary">Fechar</button>
-                    <button type="submit" class="btn-primary">Enviar Link</button>
+                <input type="email" id="forgot-email" placeholder="Digite seu e-mail" required>
+                <div class="modal-buttons">
+                    <button type="button" id="btn-close-forgot">Fechar</button>
+                    <button type="submit">Enviar E-mail de Redefinição</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- MODAL NEW: MENU EXCLUSIVO DE CLOUD SAVES  -->
-    <!-- ========================================== -->
-    <div id="modal-saves-manager" class="modal-overlay hidden">
-        <div class="modal-card save-manager-card">
-            <div class="modal-header">
-                <h3><i class="fa-solid fa-cloud-arrow-up"></i> Gerenciador de Saves na Nuvem</h3>
-                <button id="btn-close-saves-menu" class="btn-close-icon">&times;</button>
-            </div>
+    <div id="modal-saves-manager" class="modal hidden">
+        <div class="modal-content" style="max-width: 500px;">
+            <h3>Gerenciador de Saves (Nuvem)</h3>
+            <p style="font-size: 13px; color: #aaa; margin-bottom: 15px;">Crie slots manuais ou carregue um progresso salvo anteriormente no Realtime Database.</p>
             
-            <div class="modal-body">
-                <!-- Seção para gerar um novo Save State manualmente -->
-                <div class="create-save-section">
-                    <p>Salve seu progresso atual em um novo slot persistido no Realtime Database.</p>
-                    <button id="btn-capture-new-save" class="btn-success-wide"><i class="fa-solid fa-circle-plus"></i> Criar Novo Slot de Save Atual</button>
+            <div style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #444;">
+                <button id="btn-capture-new-save" style="background-color: #10ac84; color: white; width: 100%; padding: 10px; border-radius: 4px;">+ Criar Novo Slot de Save Atual</button>
+            </div>
+
+            <h4>Seus Slots Salvos:</h4>
+            <div id="cloud-saves-list" style="max-height: 200px; overflow-y: auto; margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
                 </div>
 
-                <hr class="divider">
-
-                <!-- Lista de Slots de Saves Existentes para o Jogo Atual -->
-                <h4>Slots Disponíveis para este Jogo:</h4>
-                <div id="cloud-saves-list" class="saves-list-container">
-                    <!-- Preenchido dinamicamente via JS com botões de Carregar e Apagar -->
-                    <p class="empty-list-text">Nenhum save encontrado para este jogo. Crie um acima!</p>
-                </div>
+            <div class="modal-buttons" style="margin-top: 20px; justify-content: flex-end;">
+                <button type="button" id="btn-close-saves-menu">Fechar Menu</button>
             </div>
         </div>
     </div>
 
-    <!-- Script Principal da Aplicação -->
     <script type="module" src="app.js"></script>
 </body>
 </html>
