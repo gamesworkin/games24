@@ -12,6 +12,7 @@ import {
     ref, 
     set, 
     get, 
+    push,
     child, 
     update, 
     remove, 
@@ -37,6 +38,7 @@ const db = getDatabase(app);
 let currentUser = null;
 let activeBlobUrl = null;
 let currentPlayingGameId = null;
+let currentPlayingGameTitle = "";
 
 // ELEMENTOS DA INTERFACE (UI)
 const btnNavAuth = document.getElementById('btn-nav-auth');
@@ -51,7 +53,7 @@ const emulatorScreen = document.getElementById('emulator-screen');
 const adminPanel = document.getElementById('admin-panel');
 const dynamicCatalog = document.getElementById('dynamic-catalog');
 
-// Elementos de Abas / Formulários de Autenticação
+// Elementos das Abas / Formulários de Autenticação
 const tabLogin = document.getElementById('tab-login');
 const tabRegister = document.getElementById('tab-register');
 const formLogin = document.getElementById('form-login');
@@ -63,6 +65,13 @@ const modalForgot = document.getElementById('modal-forgot');
 const linkForgot = document.getElementById('link-forgot');
 const btnCloseForgot = document.getElementById('btn-close-forgot');
 const formForgot = document.getElementById('form-forgot');
+
+// ELEMENTOS ADICIONADOS: Modal do Gerenciador de Saves Manuais
+const modalSavesManager = document.getElementById('modal-saves-manager');
+const btnOpenSavesMenu = document.getElementById('btn-open-saves-menu');
+const btnCloseSavesMenu = document.getElementById('btn-close-saves-menu');
+const btnCaptureNewSave = document.getElementById('btn-capture-new-save');
+const cloudSavesList = document.getElementById('cloud-saves-list');
 
 // Formulário Administrativo de Jogos
 const formAdminGame = document.getElementById('form-admin-game');
@@ -91,7 +100,6 @@ onAuthStateChanged(auth, async (user) => {
         btnNavAuth.classList.add('hidden');
         userInfo.classList.remove('hidden');
         
-        // Pega os dados extras do usuário no Realtime Database (Nome/Sobrenome)
         const snapshot = await get(ref(db, `users/${user.uid}/profile`));
         let displayNick = user.email.split('@')[0];
         if (snapshot.exists()) {
@@ -99,12 +107,11 @@ onAuthStateChanged(auth, async (user) => {
         }
         userName.textContent = displayNick;
 
-        // Validação estrita se é o Administrador
         if (user.email === 'admin@admin.com') {
             userBadge.textContent = 'Admin';
             userBadge.classList.add('admin');
             adminPanel.classList.remove('hidden');
-            startAdminMonitoring(); // Inicia leitura da lista de usuários
+            startAdminMonitoring();
         } else {
             userBadge.textContent = 'User';
             userBadge.classList.remove('admin');
@@ -115,16 +122,13 @@ onAuthStateChanged(auth, async (user) => {
         btnNavAuth.classList.remove('hidden');
         userInfo.classList.add('hidden');
         adminPanel.classList.add('hidden');
-        // Se deslogar no meio do jogo, cancela o monitoramento ativo
         if (currentPlayingGameId) updatePlayingStatus("Nenhum");
     }
 });
 
 // ==========================================
-// 2. FLUXOS DE AUTENTICAÇÃO CUSTOMIZADA
+// 2. FLUXOS DE AUTENTICAÇÃO
 // ==========================================
-
-// Alternar Abas (Login / Cadastro)
 tabLogin.addEventListener('click', () => {
     tabLogin.classList.add('active');
     tabRegister.classList.remove('active');
@@ -139,7 +143,6 @@ tabRegister.addEventListener('click', () => {
     formLogin.classList.add('hidden');
 });
 
-// Abrir e fechar tela de Autenticação
 btnNavAuth.addEventListener('click', () => {
     authScreen.classList.remove('hidden');
     catalogScreen.classList.add('hidden');
@@ -148,13 +151,17 @@ btnCancelAuth.addEventListener('click', () => {
     authScreen.classList.add('hidden');
     catalogScreen.classList.remove('hidden');
 });
+document.querySelectorAll('.CloseAuthBtn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        authScreen.classList.add('hidden');
+        catalogScreen.classList.remove('hidden');
+    });
+});
 
-// Submissão do Formulário de Login
 formLogin.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value;
-
     try {
         await signInWithEmailAndPassword(auth, email, password);
         authScreen.classList.add('hidden');
@@ -165,7 +172,6 @@ formLogin.addEventListener('submit', async (e) => {
     }
 });
 
-// Submissão do Formulário de Cadastro (Com Whitelist Estrita)
 formRegister.addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = document.getElementById('reg-name').value.trim();
@@ -182,16 +188,13 @@ formRegister.addEventListener('submit', async (e) => {
     try {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
-
-        // Salva os metadados do Perfil no nó do usuário dentro do Realtime Database
         await set(ref(db, `users/${user.uid}/profile`), {
             name: name,
             lastname: lastname,
             email: email,
             registeredAt: new Date().toISOString()
         });
-
-        alert("Conta criada com sucesso! Seja bem-vindo.");
+        alert("Conta criada com sucesso!");
         authScreen.classList.add('hidden');
         catalogScreen.classList.remove('hidden');
         formRegister.reset();
@@ -200,14 +203,10 @@ formRegister.addEventListener('submit', async (e) => {
     }
 });
 
-// Logout do Sistema
 btnLogout.addEventListener('click', () => {
-    signOut(auth).then(() => {
-        window.location.reload();
-    });
+    signOut(auth).then(() => { window.location.reload(); });
 });
 
-// Modal de Redefinição de Senha (Esqueci Senha)
 linkForgot.addEventListener('click', (e) => {
     e.preventDefault();
     modalForgot.classList.remove('hidden');
@@ -219,7 +218,7 @@ formForgot.addEventListener('submit', async (e) => {
     const email = document.getElementById('forgot-email').value.trim();
     try {
         await sendPasswordResetEmail(auth, email);
-        alert("E-mail de redefinição enviado! Verifique sua caixa de entrada ou spam.");
+        alert("E-mail de redefinição enviado!");
         modalForgot.classList.add('hidden');
         formForgot.reset();
     } catch (error) {
@@ -227,42 +226,36 @@ formForgot.addEventListener('submit', async (e) => {
     }
 });
 
-
 // ==========================================
-// 3. RENDERIZAÇÃO DINÂMICA DO CATÁLOGO DE JOGOS
+// 3. RENDERIZAÇÃO DINÂMICA DO CATÁLOGO
 // ==========================================
 const gamesRef = ref(db, 'games');
 onValue(gamesRef, (snapshot) => {
     dynamicCatalog.innerHTML = "";
     if (!snapshot.exists()) {
-        dynamicCatalog.innerHTML = '<div class="section-title"><h2>🛸 Catálogo</h2><p>Nenhum jogo cadastrado no banco de dados.</p></div>';
+        dynamicCatalog.innerHTML = '<p>Nenhum jogo cadastrado no banco de dados.</p>';
         return;
     }
 
     const data = snapshot.val();
-    
-    // Organização Estruturada: Categoria -> Subcategoria -> Jogos
     const structuredCatalog = {};
 
     for (let id in data) {
         const item = data[id];
         if (!structuredCatalog[item.category]) structuredCatalog[item.category] = {};
         if (!structuredCatalog[item.category][item.subcategory]) structuredCatalog[item.category][item.subcategory] = [];
-        
-        // Inclui o ID do nó no objeto para operações futuras
         structuredCatalog[item.category][item.subcategory].push({ id, ...item });
     }
 
-    // Varre o objeto estruturado construindo o HTML assincronamente
     for (let category in structuredCatalog) {
         const categoryBlock = document.createElement('section');
         categoryBlock.className = 'category-block';
-        categoryBlock.innerHTML = `<h2>🛸 ${category}</h2><p>Explore esta coleção clássica</p>`;
+        categoryBlock.innerHTML = `<h2>${category}</h2>`;
 
         for (let subcategory in structuredCatalog[category]) {
             const subBlock = document.createElement('div');
             subBlock.className = 'subcategory-block';
-            subBlock.innerHTML = `<h3>🕹️ ${subcategory}</h3>`;
+            subBlock.innerHTML = `<h3>${subcategory}</h3>`;
 
             const grid = document.createElement('div');
             grid.className = 'grid-games';
@@ -281,12 +274,10 @@ onValue(gamesRef, (snapshot) => {
                     </div>
                 `;
 
-                // Evento de Inicialização do jogo
                 card.addEventListener('click', () => {
                     launchGame(game.system, game.romUrl, game.title, game.id);
                 });
 
-                // 🔥 PROTEÇÃO CIRÚRGICA 100%: Trava completa de clique direito no card
                 card.addEventListener('contextmenu', (e) => {
                     e.preventDefault();
                     return false;
@@ -294,7 +285,6 @@ onValue(gamesRef, (snapshot) => {
 
                 grid.appendChild(card);
             });
-
             subBlock.appendChild(grid);
             categoryBlock.appendChild(subBlock);
         }
@@ -302,9 +292,8 @@ onValue(gamesRef, (snapshot) => {
     }
 });
 
-
 // ==========================================
-// 4. SISTEMA E MOTOR INTEGRADO DO EMULADOR (EmulatorJS)
+// 4. SISTEMA DO EMULADOR (EmulatorJS)
 // ==========================================
 window.launchGame = function(system, romUrl, gameTitle, gameId = "local_rom") {
     catalogScreen.classList.add('hidden');
@@ -313,10 +302,11 @@ window.launchGame = function(system, romUrl, gameTitle, gameId = "local_rom") {
     document.getElementById('playing-title').textContent = `Jogando: ${gameTitle}`;
     
     currentPlayingGameId = gameId;
+    currentPlayingGameTitle = gameTitle;
     updatePlayingStatus(gameTitle);
 
     const wrapper = document.getElementById('player-wrapper-target');
-    wrapper.innerHTML = `<div id="emulator-player"><div id="game-canvas"></div></div>`;
+    wrapper.innerHTML = `<div id="emulator-player" style="width:100%; height:100%;"><div id="game-canvas"></div></div>`;
 
     window.EJS_player = '#game-canvas';
     window.EJS_core = system; 
@@ -327,60 +317,133 @@ window.launchGame = function(system, romUrl, gameTitle, gameId = "local_rom") {
     window.EJS_AdUrl = ''; 
     window.EJS_myserver = 'true';
 
-    // 🔥 CONFIGURAÇÕES DE PREVENÇÃO PARA MOBILE E DISPOSITIVOS LIMITADOS (SOLUÇÃO SEM STORAGE)
-    window.EJS_disableLoadState = false; 
+    // Desativa escutas e downloads automáticos que travam o processador
+    window.EJS_disableLoadState = true; 
     window.EJS_forceLoadOnStart = false; 
-    window.EJS_cacheInIndexDB = false;   // Impede que o emulador trave tentando acessar o sistema de arquivos local do celular
-    window.EJS_b64SaveStates = true;     // Força o emulador a gerenciar o estado em memória RAM virtual
+    window.EJS_cacheInIndexDB = false;   
+    window.EJS_b64SaveStates = false; 
 
-    // CHANCE DE RECUPERAR SAVE STATE VIA REALTIME DATABASE (BASE64)
-    window.EJS_onLogin = async function() {
-        if (!currentUser || gameId === "local_rom") return;
+    window.EJS_onLogin = function() { console.log("Core carregado com sucesso."); };
+    window.EJS_onSaveState = function(data) { console.log("Trigger automático nativo cancelado."); };
 
-        try {
-            const saveSnapshot = await get(ref(db, `users/${currentUser.uid}/saves/${gameId}`));
-            if (saveSnapshot.exists()) {
-                const base64Data = saveSnapshot.val().state;
-                // Transforma a String Base64 guardada de volta em ArrayBuffer binário para a RAM
-                const binaryString = atob(base64Data);
-                const bytes = new Uint8Array(binaryString.length);
-                for (let i = 0; i < binaryString.length; i++) {
-                    bytes[i] = binaryString.charCodeAt(i);
+    const script = document.createElement('script');
+    script.src = 'https://cdn.emulatorjs.org/latest/data/loader.js';
+    document.getElementById('emulator-player').appendChild(script);
+};
+
+// ==========================================
+// FUNÇÕES DO MODAL INTERNO DE SLOTS DE SAVE MANUAL
+// ==========================================
+
+// Abrir modal e carregar lista correspondente ao jogo em execução
+btnOpenSavesMenu.addEventListener('click', () => {
+    if (!currentUser) {
+        alert("Faça login para salvar e sincronizar o seu progresso!");
+        return;
+    }
+    if (currentPlayingGameId === "local_rom") {
+        alert("Gerenciador na nuvem desativado para ROMs executadas localmente.");
+        return;
+    }
+
+    modalSavesManager.classList.remove('hidden');
+    loadCloudSavesList();
+});
+
+// Fechar modal de gerenciamento
+btnCloseSavesMenu.addEventListener('click', () => {
+    modalSavesManager.classList.add('hidden');
+});
+
+// Sincronizar e montar lista de slots em tempo real do Firebase Realtime Database
+function loadCloudSavesList() {
+    const savesRef = ref(db, `users/${currentUser.uid}/saves/${currentPlayingGameId}`);
+    onValue(savesRef, (snapshot) => {
+        cloudSavesList.innerHTML = "";
+        
+        if (!snapshot.exists()) {
+            cloudSavesList.innerHTML = '<p style="text-align:center; font-size:12px; color:#8d8d99; padding:15px 0;">Nenhum save encontrado para este jogo.</p>';
+            return;
+        }
+
+        const data = snapshot.val();
+        let slotIndex = 1;
+
+        for (let saveKey in data) {
+            const saveItem = data[saveKey];
+            const dateFormatted = new Date(saveItem.updatedAt).toLocaleString('pt-BR');
+
+            const itemRow = document.createElement('div');
+            itemRow.className = 'save-slot-item';
+            itemRow.innerHTML = `
+                <div class="slot-meta">
+                    <span class="slot-title">Progresso Salvo #${slotIndex}</span>
+                    <span class="slot-date">${dateFormatted}</span>
+                </div>
+                <div class="slot-actions">
+                    <button class="btn-slot-load" data-key="${saveKey}">Carregar</button>
+                    <button class="btn-slot-delete" data-key="${saveKey}">Excluir</button>
+                </div>
+            `;
+
+            // Evento de Injeção: Converte Base64 para Uint8Array e empurra para a memória RAM do Core
+            itemRow.querySelector('.btn-slot-load').addEventListener('click', (e) => {
+                const key = e.target.getAttribute('data-key');
+                const base64Data = data[key].state;
+
+                try {
+                    const binaryString = atob(base64Data);
+                    const bytes = new Uint8Array(binaryString.length);
+                    for (let i = 0; i < binaryString.length; i++) {
+                        bytes[i] = binaryString.charCodeAt(i);
+                    }
+                    
+                    // Injeta a cadeia binária limpa na função de load síncrono da interface global do emulador
+                    window.EJS_LoadState(bytes);
+                    modalSavesManager.classList.add('hidden');
+                    alert("Estado restaurado com sucesso!");
+                } catch (err) {
+                    alert("Falha na injeção de memória: " + err.message);
                 }
-                window.EJS_LoadState(bytes);
-                console.log("Progresso do Firebase Realtime Database injetado com sucesso na RAM!");
-            }
-        } catch (err) {
-            console.error("Falha ao recuperar save do Realtime Database:", err);
-        }
-    };
+            });
 
-    // OPERAÇÃO DE GRAVAÇÃO DO SAVE STATE COM TRATAMENTO GARANTIDO PARA AMBIENTES MOBILE
-    window.EJS_onSaveState = async function(data) {
-        if (!currentUser) {
-            alert("Aviso: Faça login para salvar suas conquistas e fases nesta plataforma!");
+            // Evento para Deletar o Slot
+            itemRow.querySelector('.btn-slot-delete').addEventListener('click', (e) => {
+                const key = e.target.getAttribute('data-key');
+                if (confirm("Deseja deletar permanentemente este slot de salvamento?")) {
+                    remove(ref(db, `users/${currentUser.uid}/saves/${currentPlayingGameId}/${key}`));
+                }
+            });
+
+            cloudSavesList.appendChild(itemRow);
+            slotIndex++;
+        }
+    });
+}
+
+// Capturar estado instantâneo do canvas/WAS_core e empurrar uma nova string Base64 pro nó de dados
+btnCaptureNewSave.addEventListener('click', () => {
+    if (!window.EJS_emulatorHandler || !window.EJS_emulatorHandler.components || !window.EJS_emulatorHandler.components.EJS_GetState) {
+        if (typeof window.EJS_GetState !== "function") {
+            alert("O motor do emulador ainda está instanciando os buffers de tela. Aguarde o jogo iniciar.");
             return;
         }
-        if (gameId === "local_rom") {
-            alert("Saves automáticos não estão ativos para mídias carregadas localmente.");
+    }
+
+    const getStateFunc = window.EJS_GetState || window.EJS_emulatorHandler.components.EJS_GetState;
+
+    getStateFunc((data) => {
+        if (!data) {
+            alert("Não foi possível processar o despejo de memória do emulador neste frame.");
             return;
         }
 
         try {
-            // Se o emulador falhar devido à renderização ou restrições e enviar dados vazios
-            if (!data) {
-                console.warn("Aviso: Buffer de save recebido como nulo pelo sistema.");
-                return;
-            }
-
             let base64State = "";
 
-            // Se o emulador já fornecer os dados em string devido à flag EJS_b64SaveStates
             if (typeof data === "string") {
                 base64State = data;
             } else {
-                // Caso contrário, faz o processamento seguro do ArrayBuffer binário vindo da RAM
-                if (data.byteLength === 0) return;
                 let binary = '';
                 const bytes = new Uint8Array(data);
                 const len = bytes.byteLength;
@@ -390,24 +453,25 @@ window.launchGame = function(system, romUrl, gameTitle, gameId = "local_rom") {
                 base64State = btoa(binary);
             }
 
-            // Grava os dados diretamente no nó do respectivo usuário conectado
-            await set(ref(db, `users/${currentUser.uid}/saves/${gameId}`), {
+            const newSaveRef = push(ref(db, `users/${currentUser.uid}/saves/${currentPlayingGameId}`));
+            
+            set(newSaveRef, {
                 state: base64State,
                 updatedAt: new Date().toISOString(),
-                gameTitle: gameTitle
+                gameTitle: currentPlayingGameTitle
+            }).then(() => {
+                alert("Progresso registrado com sucesso na nuvem!");
             });
-            console.log("Estado de fase gravado com sucesso no nó do Realtime Database!");
+
         } catch (err) {
-            console.error("Erro ao persistir save state no Realtime Database:", err);
+            alert("Erro de conversão de dados binários: " + err.message);
         }
-    };
+    });
+});
 
-    const script = document.createElement('script');
-    script.src = 'https://cdn.emulatorjs.org/latest/data/loader.js';
-    document.getElementById('emulator-player').appendChild(script);
-};
-
-// Atualizador de Atividade de Jogo (Monitoramento do Admin)
+// ==========================================
+// FINALIZAÇÃO DAS COMPONENTES OPERACIONAIS
+// ==========================================
 async function updatePlayingStatus(gameName) {
     if (!currentUser) return;
     try {
@@ -417,7 +481,6 @@ async function updatePlayingStatus(gameName) {
     } catch (e) { console.error(e); }
 }
 
-// Operação de Fechamento Máximo (Purga de Threads)
 window.closeEmulator = function() {
     updatePlayingStatus("Nenhum").then(() => {
         sessionStorage.setItem('emu_purge_active', 'true');
@@ -425,7 +488,6 @@ window.closeEmulator = function() {
     });
 };
 
-// Resgate de estado pós purga
 window.addEventListener('DOMContentLoaded', () => {
     if (sessionStorage.getItem('emu_purge_active') === 'true') {
         sessionStorage.removeItem('emu_purge_active');
@@ -434,7 +496,6 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Processamento de Upload e Leitura de ROMs Locais para a RAM
 window.uploadAndPlay = function() {
     const fileInput = document.getElementById('rom-upload');
     let system = document.getElementById('system-select').value;
@@ -455,18 +516,14 @@ window.uploadAndPlay = function() {
     launchGame(system, activeBlobUrl, file.name, "local_rom");
 };
 
-// Utilitário estético para exibir nome do arquivo selecionado localmente
 document.getElementById('rom-upload')?.addEventListener('change', (e) => {
     const fileName = e.target.files[0]?.name || "Nenhum arquivo selecionado";
     document.getElementById('file-name-display').textContent = fileName;
 });
 
-
 // ==========================================
-// 5. MÓDULO EXCLUSIVO DO ADMIN (CRUD / BACKUP)
+// 5. SEÇÃO ADMINISTRATIVA (CRUD / BACKUP)
 // ==========================================
-
-// Inserção ou Atualização de Mídias via Formulário Admin
 formAdminGame.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!currentUser || currentUser.email !== 'admin@admin.com') return;
@@ -483,26 +540,23 @@ formAdminGame.addEventListener('submit', async (e) => {
 
     try {
         await set(ref(db, `games/${id}`), gameData);
-        alert(adminGameId.value ? "Jogo editado com sucesso!" : "Mídia incluída no banco de dados!");
+        alert(adminGameId.value ? "Jogo editado com sucesso!" : "Jogo cadastrado com sucesso!");
         resetAdminForm();
     } catch (err) {
-        alert("Erro na operação administrativa: " + err.message);
+        alert("Erro na operação: " + err.message);
     }
 });
 
-// Cancelar Edição do Formulário
 btnCancelEdit.addEventListener('click', resetAdminForm);
 
 function resetAdminForm() {
     formAdminGame.reset();
     adminGameId.value = "";
-    btnSaveGame.textContent = "Salvar Mídia 💾";
+    btnSaveGame.textContent = "Salvar Jogo";
     btnCancelEdit.classList.add('hidden');
 }
 
-// Injeção Global de Gatilhos de Edição e Exclusão no Catálogo Administrativo
 function startAdminMonitoring() {
-    // Escuta ativa de usuários e o que eles estão jogando
     const usersRef = ref(db, 'users');
     onValue(usersRef, (snapshot) => {
         adminUsersList.innerHTML = "";
@@ -516,10 +570,10 @@ function startAdminMonitoring() {
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><strong>${profile.name} ${profile.lastname}</strong></td>
-                <td><span style="color:var(--text-gray);">${profile.email}</span></td>
-                <td><span style="color:var(--neon-cyan);">${profile.currentlyPlaying || 'Nenhum'}</span></td>
+                <td>${profile.email}</td>
+                <td><span style="color:#00b4d8;">${profile.currentlyPlaying || 'Nenhum'}</span></td>
                 <td>
-                    <button class="btn-sm btn-delete-user" data-uid="${uid}" data-email="${profile.email}">
+                    <button class="btn-sm btn-delete-user" style="background-color:#ff4757;" data-uid="${uid}">
                         Deletar Conta
                     </button>
                 </td>
@@ -527,28 +581,21 @@ function startAdminMonitoring() {
             adminUsersList.appendChild(tr);
         }
 
-        // Evento de deleção de conta do usuário sob solicitação
         document.querySelectorAll('.btn-delete-user').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const uid = e.target.getAttribute('data-uid');
-                const email = e.target.getAttribute('data-email');
-                
-                if (confirm(`ATENÇÃO: Deseja apagar permanentemente todos os saves e o nó do usuário [ ${email} ] do banco? Não afetará o Auth diretamente.`)) {
-                    remove(ref(db, `users/${uid}`)).then(() => {
-                        alert(`Dados limpos do Realtime Database com sucesso!\nCopie o e-mail: ${email} e remova-o manualmente no painel de Authentication do Firebase.`);
-                    }).catch(err => alert("Erro ao deletar: " + err.message));
+                if (confirm("Deseja apagar as informações e saves deste usuário do Realtime Database?")) {
+                    remove(ref(db, `users/${uid}`)).then(() => alert("Usuário removido do nó."));
                 }
             });
         });
     });
 
-    // Adiciona botões de gerência administrativa nos cards quando renderizados (Apenas se for Admin logado)
     const adminGamesWatcher = ref(db, 'games');
     onValue(adminGamesWatcher, (snapshot) => {
         if (!snapshot.exists()) return;
         const data = snapshot.val();
 
-        // Aguarda a renderização do catálogo regular e anexa botões de controle adicionais apenas na visão do admin
         setTimeout(() => {
             document.querySelectorAll('.game-card').forEach(card => {
                 const img = card.querySelector('img');
@@ -556,18 +603,15 @@ function startAdminMonitoring() {
                 const id = img.getAttribute('data-id');
                 if (!id || id === 'local_rom') return;
 
-                // Evita duplicidade de painel interno de botões
                 if (card.querySelector('.admin-card-actions')) return;
 
                 const actionDiv = document.createElement('div');
                 actionDiv.className = 'admin-card-actions';
-                actionDiv.style = "padding:10px; display:flex; gap:10px; background: rgba(0,0,0,0.5);";
                 actionDiv.innerHTML = `
-                    <button class="btn-sm btn-edit-game" style="border-color:var(--neon-cyan); color:var(--neon-cyan);" data-id="${id}">Editar</button>
-                    <button class="btn-sm btn-del-game" style="border-color:#ff4757; color:#ff4757;" data-id="${id}">Apagar</button>
+                    <button class="btn-sm btn-edit-game" data-id="${id}">Editar</button>
+                    <button class="btn-sm btn-del-game" style="background-color:#ff4757;" data-id="${id}">Apagar</button>
                 `;
 
-                // Intercepta cliques de edição
                 actionDiv.querySelector('.btn-edit-game').addEventListener('click', (e) => {
                     e.stopPropagation();
                     const gId = e.target.getAttribute('data-id');
@@ -579,18 +623,16 @@ function startAdminMonitoring() {
                     adminSystemCore.value = gData.system;
                     adminGameTitle.value = gData.title;
                     adminGameCover.value = gData.coverUrl;
-                    adminGameUrl = gData.romUrl;
+                    adminGameUrl.value = gData.romUrl;
 
-                    btnSaveGame.textContent = "Atualizar Mídia 🔄";
+                    btnSaveGame.textContent = "Atualizar Jogo";
                     btnCancelEdit.classList.remove('hidden');
-                    window.scrollTo({ top: adminPanel.offsetTop - 20, behavior: 'smooth' });
                 });
 
-                // Intercepta cliques de exclusão de mídia
                 actionDiv.querySelector('.btn-del-game').addEventListener('click', (e) => {
                     e.stopPropagation();
                     const gId = e.target.getAttribute('data-id');
-                    if (confirm(`Deseja apagar o jogo "${data[gId].title}" do catálogo?`)) {
+                    if (confirm(`Deseja remover "${data[gId].title}" do catálogo?`)) {
                         remove(ref(db, `games/${gId}`)).then(() => alert("Jogo removido!"));
                     }
                 });
@@ -601,25 +643,23 @@ function startAdminMonitoring() {
     });
 }
 
-// Exportação de Backup Total em JSON
 btnExportJson.addEventListener('click', async () => {
     try {
         const snapshot = await get(ref(db, 'games'));
         if (!snapshot.exists()) {
-            alert("O catálogo está vazio. Nada para exportar.");
+            alert("O catálogo está vazio.");
             return;
         }
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(snapshot.val(), null, 4));
         const downloadAnchor = document.createElement('a');
         downloadAnchor.setAttribute("href", dataStr);
-        downloadAnchor.setAttribute("download", `backup_jogos_${Date.now()}.json`);
+        downloadAnchor.setAttribute("download", `backup_jogos.json`);
         document.body.appendChild(downloadAnchor);
         downloadAnchor.click();
         downloadAnchor.remove();
     } catch (e) { alert("Erro ao exportar backup: " + e.message); }
 });
 
-// Importação em Lote de Backup JSON
 btnImportJson.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -628,21 +668,18 @@ btnImportJson.addEventListener('change', (e) => {
     reader.onload = async (event) => {
         try {
             const importedGames = JSON.parse(event.target.result);
-            if (typeof importedGames !== 'object') throw new Error("Formato JSON Inválido.");
-
-            if (confirm("Isto irá mesclar as mídias importadas com seu catálogo atual no Firebase. Prosseguir?")) {
+            if (confirm("Mesclar mídias importadas com as existentes?")) {
                 await update(ref(db, 'games'), importedGames);
-                alert("Catálogo importado e atualizado com sucesso!");
-                e.target.value = ""; // Reseta o input file
+                alert("Catálogo importado com sucesso!");
+                e.target.value = "";
             }
         } catch (err) {
-            alert("Falha ao processar arquivo JSON: " + err.message);
+            alert("Falha ao ler JSON: " + err.message);
         }
     };
     reader.readAsText(file);
 });
 
-// 🔥 TRAVA GLOBAL DE PREVENÇÃO EXTRA DO MOUSE
 document.addEventListener('contextmenu', (e) => {
     if (e.target.closest('.game-card')) {
         e.preventDefault();
