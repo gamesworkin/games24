@@ -327,8 +327,11 @@ window.launchGame = function(system, romUrl, gameTitle, gameId = "local_rom") {
     window.EJS_AdUrl = ''; 
     window.EJS_myserver = 'true';
 
-    window.EJS_disableLoadState = true; 
-    window.EJS_forceLoadOnStart = true; 
+    // 🔥 CONFIGURAÇÕES DE PREVENÇÃO PARA MOBILE E DISPOSITIVOS LIMITADOS (SOLUÇÃO SEM STORAGE)
+    window.EJS_disableLoadState = false; 
+    window.EJS_forceLoadOnStart = false; 
+    window.EJS_cacheInIndexDB = false;   // Impede que o emulador trave tentando acessar o sistema de arquivos local do celular
+    window.EJS_b64SaveStates = true;     // Força o emulador a gerenciar o estado em memória RAM virtual
 
     // CHANCE DE RECUPERAR SAVE STATE VIA REALTIME DATABASE (BASE64)
     window.EJS_onLogin = async function() {
@@ -352,7 +355,7 @@ window.launchGame = function(system, romUrl, gameTitle, gameId = "local_rom") {
         }
     };
 
-    // OPERAÇÃO DE GRAVAÇÃO DO SAVE STATE COM PROTEÇÃO CONTRA CONFLITOS DE RENDERING/WEBGL
+    // OPERAÇÃO DE GRAVAÇÃO DO SAVE STATE COM TRATAMENTO GARANTIDO PARA AMBIENTES MOBILE
     window.EJS_onSaveState = async function(data) {
         if (!currentUser) {
             alert("Aviso: Faça login para salvar suas conquistas e fases nesta plataforma!");
@@ -364,21 +367,30 @@ window.launchGame = function(system, romUrl, gameTitle, gameId = "local_rom") {
         }
 
         try {
-            // Tratamento preventivo: se o emulador falhar na renderização e enviar dados inválidos
-            if (!data || data.byteLength === 0) {
-                console.warn("Aviso: O emulador enviou um buffer de save vazio ou corrompido devido às restrições do WebGL do navegador.");
+            // Se o emulador falhar devido à renderização ou restrições e enviar dados vazios
+            if (!data) {
+                console.warn("Aviso: Buffer de save recebido como nulo pelo sistema.");
                 return;
             }
 
-            // Transforma o ArrayBuffer de dados físicos da RAM em String Base64 para aceitar no JSON
-            let binary = '';
-            const bytes = new Uint8Array(data);
-            const len = bytes.byteLength;
-            for (let i = 0; i < len; i++) {
-                binary += String.fromCharCode(bytes[i]);
-            }
-            const base64State = btoa(binary);
+            let base64State = "";
 
+            // Se o emulador já fornecer os dados em string devido à flag EJS_b64SaveStates
+            if (typeof data === "string") {
+                base64State = data;
+            } else {
+                // Caso contrário, faz o processamento seguro do ArrayBuffer binário vindo da RAM
+                if (data.byteLength === 0) return;
+                let binary = '';
+                const bytes = new Uint8Array(data);
+                const len = bytes.byteLength;
+                for (let i = 0; i < len; i++) {
+                    binary += String.fromCharCode(bytes[i]);
+                }
+                base64State = btoa(binary);
+            }
+
+            // Grava os dados diretamente no nó do respectivo usuário conectado
             await set(ref(db, `users/${currentUser.uid}/saves/${gameId}`), {
                 state: base64State,
                 updatedAt: new Date().toISOString(),
@@ -567,7 +579,7 @@ function startAdminMonitoring() {
                     adminSystemCore.value = gData.system;
                     adminGameTitle.value = gData.title;
                     adminGameCover.value = gData.coverUrl;
-                    adminGameUrl.value = gData.romUrl;
+                    adminGameUrl = gData.romUrl;
 
                     btnSaveGame.textContent = "Atualizar Mídia 🔄";
                     btnCancelEdit.classList.remove('hidden');
