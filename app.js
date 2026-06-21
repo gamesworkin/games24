@@ -19,7 +19,7 @@ import {
     onValue 
 } from "firebase/database";
 
-// CONFIGURAÇÃO DO CONSOLE FIREBASE
+// CONFIGURAÇÃO DO CONSOLE FIREBASE (MANTIDA ORIGINAL)
 const firebaseConfig = {
   apiKey: "AIzaSyATr3AFcjJtamWRKZEBBcsA8vi-_ckCeEs",
   authDomain: "games2-c9b04.firebaseapp.com",
@@ -53,7 +53,7 @@ const emulatorScreen = document.getElementById('emulator-screen');
 const adminPanel = document.getElementById('admin-panel');
 const dynamicCatalog = document.getElementById('dynamic-catalog');
 
-// Elementos das Abas / Formulários de Autenticação
+// Elementos de Abas / Formulários de Autenticação
 const tabLogin = document.getElementById('tab-login');
 const tabRegister = document.getElementById('tab-register');
 const formLogin = document.getElementById('form-login');
@@ -66,7 +66,7 @@ const linkForgot = document.getElementById('link-forgot');
 const btnCloseForgot = document.getElementById('btn-close-forgot');
 const formForgot = document.getElementById('form-forgot');
 
-// ELEMENTOS ADICIONADOS: Modal do Gerenciador de Saves Manuais
+// SELETORES ADICIONADOS: Elementos do Novo Modal de Slots
 const modalSavesManager = document.getElementById('modal-saves-manager');
 const btnOpenSavesMenu = document.getElementById('btn-open-saves-menu');
 const btnCloseSavesMenu = document.getElementById('btn-close-saves-menu');
@@ -293,7 +293,7 @@ onValue(gamesRef, (snapshot) => {
 });
 
 // ==========================================
-// 4. SISTEMA DO EMULADOR (EmulatorJS)
+// 4. MOTOR DO EMULADOR (EmulatorJS)
 // ==========================================
 window.launchGame = function(system, romUrl, gameTitle, gameId = "local_rom") {
     catalogScreen.classList.add('hidden');
@@ -317,14 +317,14 @@ window.launchGame = function(system, romUrl, gameTitle, gameId = "local_rom") {
     window.EJS_AdUrl = ''; 
     window.EJS_myserver = 'true';
 
-    // Desativa escutas e downloads automáticos que travam o processador
+    // Desativa escutas e rotinas nativas automatizadas para dar lugar ao controle de slots manuais
     window.EJS_disableLoadState = true; 
     window.EJS_forceLoadOnStart = false; 
     window.EJS_cacheInIndexDB = false;   
     window.EJS_b64SaveStates = false; 
 
-    window.EJS_onLogin = function() { console.log("Core carregado com sucesso."); };
-    window.EJS_onSaveState = function(data) { console.log("Trigger automático nativo cancelado."); };
+    window.EJS_onLogin = function() { console.log("Core carregado."); };
+    window.EJS_onSaveState = function(data) { console.log("Gatilho automático ignorado."); };
 
     const script = document.createElement('script');
     script.src = 'https://cdn.emulatorjs.org/latest/data/loader.js';
@@ -332,17 +332,17 @@ window.launchGame = function(system, romUrl, gameTitle, gameId = "local_rom") {
 };
 
 // ==========================================
-// FUNÇÕES DO MODAL INTERNO DE SLOTS DE SAVE MANUAL
+// LÓGICA COMPLETA DO GERENCIADOR DE SLOTS MANUAIS
 // ==========================================
 
-// Abrir modal e carregar lista correspondente ao jogo em execução
+// Gatilho: Abrir menu e renderizar os slots salvos na nuvem para o respectivo ID do jogo
 btnOpenSavesMenu.addEventListener('click', () => {
     if (!currentUser) {
-        alert("Faça login para salvar e sincronizar o seu progresso!");
+        alert("Você precisa fazer login para acessar e sincronizar seus slots de salvamento!");
         return;
     }
     if (currentPlayingGameId === "local_rom") {
-        alert("Gerenciador na nuvem desativado para ROMs executadas localmente.");
+        alert("O gerenciador em nuvem não suporta ROMs executadas localmente.");
         return;
     }
 
@@ -350,12 +350,12 @@ btnOpenSavesMenu.addEventListener('click', () => {
     loadCloudSavesList();
 });
 
-// Fechar modal de gerenciamento
+// Fechar menu de slots
 btnCloseSavesMenu.addEventListener('click', () => {
     modalSavesManager.classList.add('hidden');
 });
 
-// Sincronizar e montar lista de slots em tempo real do Firebase Realtime Database
+// Monitoramento e montagem dinâmica dos slots associados ao jogo atual
 function loadCloudSavesList() {
     const savesRef = ref(db, `users/${currentUser.uid}/saves/${currentPlayingGameId}`);
     onValue(savesRef, (snapshot) => {
@@ -386,7 +386,7 @@ function loadCloudSavesList() {
                 </div>
             `;
 
-            // Evento de Injeção: Converte Base64 para Uint8Array e empurra para a memória RAM do Core
+            // Ação: Puxa o Base64, reconverte para Uint8Array e injeta de volta à memória ram ativa
             itemRow.querySelector('.btn-slot-load').addEventListener('click', (e) => {
                 const key = e.target.getAttribute('data-key');
                 const base64Data = data[key].state;
@@ -398,16 +398,15 @@ function loadCloudSavesList() {
                         bytes[i] = binaryString.charCodeAt(i);
                     }
                     
-                    // Injeta a cadeia binária limpa na função de load síncrono da interface global do emulador
                     window.EJS_LoadState(bytes);
                     modalSavesManager.classList.add('hidden');
                     alert("Estado restaurado com sucesso!");
                 } catch (err) {
-                    alert("Falha na injeção de memória: " + err.message);
+                    alert("Erro ao restaurar dados na RAM: " + err.message);
                 }
             });
 
-            // Evento para Deletar o Slot
+            // Ação: Exclusão lógica e física do slot individual direto do Firebase
             itemRow.querySelector('.btn-slot-delete').addEventListener('click', (e) => {
                 const key = e.target.getAttribute('data-key');
                 if (confirm("Deseja deletar permanentemente este slot de salvamento?")) {
@@ -421,11 +420,11 @@ function loadCloudSavesList() {
     });
 }
 
-// Capturar estado instantâneo do canvas/WAS_core e empurrar uma nova string Base64 pro nó de dados
+// Gatilho: Intercepta o canvas e empurra o frame binário comprimido em Base64 para o Realtime Database
 btnCaptureNewSave.addEventListener('click', () => {
     if (!window.EJS_emulatorHandler || !window.EJS_emulatorHandler.components || !window.EJS_emulatorHandler.components.EJS_GetState) {
         if (typeof window.EJS_GetState !== "function") {
-            alert("O motor do emulador ainda está instanciando os buffers de tela. Aguarde o jogo iniciar.");
+            alert("O motor do emulador ainda está instanciando os buffers de tela. Aguarde o jogo iniciar a gameplay.");
             return;
         }
     }
@@ -470,7 +469,7 @@ btnCaptureNewSave.addEventListener('click', () => {
 });
 
 // ==========================================
-// FINALIZAÇÃO DAS COMPONENTES OPERACIONAIS
+// 5. ROTINAS DO SISTEMA COMPLEMENTARES
 // ==========================================
 async function updatePlayingStatus(gameName) {
     if (!currentUser) return;
@@ -522,7 +521,7 @@ document.getElementById('rom-upload')?.addEventListener('change', (e) => {
 });
 
 // ==========================================
-// 5. SEÇÃO ADMINISTRATIVA (CRUD / BACKUP)
+// 6. SEÇÃO ADMINISTRATIVA (CRUD / MONITORAMENTO)
 // ==========================================
 formAdminGame.addEventListener('submit', async (e) => {
     e.preventDefault();
