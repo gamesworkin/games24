@@ -23,6 +23,17 @@ let activeBlobUrl = null;
 let cachedGames = {};
 let selectedPreviewGameId = null;
 
+// DEFINIÇÃO DA WHITELIST DE PROVEDORES DE EMAIL
+const emailWhitelist = [
+    "gmail.com",
+    "outlook.com",
+    "hotmail.com",
+    "yahoo.com",
+    "yahoo.com.br",
+    "live.com",
+    "icloud.com"
+];
+
 // Captura de Elementos Gerais da Interface
 const btnOpenAuth = document.getElementById('btn-open-auth');
 const btnLogout = document.getElementById('btn-logout');
@@ -189,12 +200,13 @@ if (document.getElementById('close-profile-modal')) document.getElementById('clo
 if (document.getElementById('close-preview-modal')) document.getElementById('close-preview-modal').addEventListener('click', () => modalGamePreview.classList.add('hidden'));
 
 // --- SISTEMA INTEGRAÇÃO KEYDOWN (ENTER) PARA FLUXO UX DE LOGIN ---
-document.querySelectorAll('.next-on-enter').forEach(input => {
+document.querySelectorAll('#modal-auth .next-on-enter').forEach(input => {
     input.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
-            // Localiza todos os inputs visíveis dentro do modal ativo
-            const visibleInputs = Array.from(document.querySelectorAll('#modal-auth .input-style:not((.hidden *))')).filter(i => i.getBoundingClientRect().width > 0);
+            // Localiza todos os inputs visíveis dentro da seção ativa do modal
+            const activeSection = authLoginSec.classList.contains('hidden') ? authRegisterSec : authLoginSec;
+            const visibleInputs = Array.from(activeSection.querySelectorAll('.input-style'));
             const index = visibleInputs.indexOf(e.target);
             if (index > -1 && visibleInputs[index + 1]) {
                 visibleInputs[index + 1].focus();
@@ -263,6 +275,19 @@ async function processRegisterAction() {
     const senha = registerPasswordInput.value.trim();
 
     if(!nome || !sobrenome || !cidade || !email || !senha) { alert("Preencha todos os campos!"); return; }
+
+    // --- VALIDAÇÃO DA WHITELIST DE EMAILS ---
+    const emailParts = email.split('@');
+    if (emailParts.length !== 2) {
+        alert("Insira um endereço de e-mail válido!");
+        return;
+    }
+    
+    const emailDomain = emailParts[1].toLowerCase();
+    if (!emailWhitelist.includes(emailDomain)) {
+        alert(`O domínio "@${emailDomain}" não é permitido.\n\nPor favor, utilize um e-mail de um provedor confiável (Gmail, Hotmail, Outlook, Yahoo ou iCloud).`);
+        return;
+    }
 
     // Mutação visual para estado de carregamento
     btnExecuteRegister.textContent = "Cadastrando...";
