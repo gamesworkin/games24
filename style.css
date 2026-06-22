@@ -131,7 +131,7 @@ body {
 .input-group label { font-weight: 600; color: var(--neon-cyan); min-width: 80px; text-align: right; }
 
 .select-style, .input-style {
-    flex: 1;
+    width: 100%;
     padding: 12px;
     background: var(--bg-input);
     color: white;
