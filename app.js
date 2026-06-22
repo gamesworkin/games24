@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
-import { getDatabase, ref, set, get, child, onValue, update, remove } from "firebase/database";
+import { getDatabase, ref, set, get, onValue, update, remove } from "firebase/database";
 
 // CONFIGURAÇÃO DO CONSOLE FIREBASE
 const firebaseConfig = {
@@ -78,17 +78,51 @@ onAuthStateChanged(auth, async (user) => {
                     solicitou_exclusao: false
                 });
             }
+            // Alimenta e monitora os painéis do jogador
+            loadProfileDataToFields();
             setupPlayerDashboardObservers();
         }
     } else {
         currentUser = null;
         currentUId = null;
         if (btnOpenAuth) btnOpenAuth.classList.remove('hidden');
+        if (userInfo) userInfo.classList.remove('hidden');
         if (userInfo) userInfo.classList.add('hidden');
         if (btnAdminPanel) btnAdminPanel.classList.add('hidden');
         if (playerDashboard) playerDashboard.classList.add('hidden');
     }
 });
+
+// Carrega os dados reais do usuário logado nos inputs do formulário de perfil (NOVO)
+async function loadProfileDataToFields() {
+    if (!currentUId) return;
+    const snapshot = await get(ref(database, `usuarios/${currentUId}/perfil`));
+    if (snapshot.exists()) {
+        const p = snapshot.val();
+        if(document.getElementById('edit-nome')) document.getElementById('edit-nome').value = p.nome || "";
+        if(document.getElementById('edit-sobrenome')) document.getElementById('edit-sobrenome').value = p.sobrenome || "";
+        if(document.getElementById('edit-cidade')) document.getElementById('edit-cidade').value = p.cidade || "";
+        if(document.getElementById('edit-email')) document.getElementById('edit-email').value = p.email || "";
+    }
+}
+
+// Salva alterações do perfil do usuário comum (NOVO)
+if (document.getElementById('btn-save-profile')) {
+    document.getElementById('btn-save-profile').addEventListener('click', async () => {
+        if (!currentUId) return;
+        const nome = document.getElementById('edit-nome').value.trim();
+        const sobrenome = document.getElementById('edit-sobrenome').value.trim();
+        const cidade = document.getElementById('edit-cidade').value.trim();
+
+        if (!nome || !sobrenome || !cidade) { alert("Os campos Nome, Sobrenome e Cidade não podem ficar vazios!"); return; }
+
+        try {
+            await update(ref(database, `usuarios/${currentUId}/perfil`), { nome, sobrenome, cidade });
+            alert("Informações de perfil atualizadas com sucesso!");
+            if (userName) userName.textContent = nome;
+        } catch (err) { alert("Falha ao salvar modificações: " + err.message); }
+    });
+}
 
 // Abertura / Fechamento de Janelas Modais
 if (btnOpenAuth) btnOpenAuth.addEventListener('click', () => { modalAuth.classList.remove('hidden'); authLoginSec.classList.remove('hidden'); authRegisterSec.classList.add('hidden'); });
@@ -141,7 +175,7 @@ if (document.getElementById('btn-execute-login')) {
 
 if (btnLogout) btnLogout.addEventListener('click', () => signOut(auth));
 
-// Envio do link de recuperação de senha (Adicionado)
+// Envio do link de recuperação de senha
 if (document.getElementById('btn-execute-recovery')) {
     document.getElementById('btn-execute-recovery').addEventListener('click', async () => {
         const email = document.getElementById('forgot-email').value.trim();
@@ -150,9 +184,7 @@ if (document.getElementById('btn-execute-recovery')) {
             await sendPasswordResetEmail(auth, email);
             alert("Link de redefinição enviado com sucesso para o e-mail informado!");
             modalForgot.classList.add('hidden');
-        } catch (err) {
-            alert("Erro ao enviar link de recuperação: " + err.message);
-        }
+        } catch (err) { alert("Erro ao enviar link de recuperação: " + err.message); }
     });
 }
 
@@ -256,7 +288,7 @@ function setupPlayerDashboardObservers() {
         updateFavoriteButtonsVisuals();
     });
 
-    // Escuta sachês (saves Base64) em tempo real
+    // Escuta saves em tempo real
     onValue(ref(database, `usuarios/${currentUId}/saves`), (snapshot) => {
         const tableBody = document.getElementById('player-saves-table-body');
         if (!tableBody) return;
@@ -264,7 +296,7 @@ function setupPlayerDashboardObservers() {
         const saves = snapshot.val() || {};
 
         if (Object.keys(saves).length === 0) {
-            tableBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color: var(--text-gray);">Nenhum sachê em nuvem.</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color: var(--text-gray);">Nenhum save em nuvem.</td></tr>`;
             return;
         }
 
@@ -283,9 +315,9 @@ function setupPlayerDashboardObservers() {
 }
 
 window.deleteSaveState = async function(saveKey) {
-    if (confirm("Tem certeza que deseja apagar permanentemente esse sachê de memória em nuvem?")) {
+    if (confirm("Tem certeza que deseja apagar permanentemente esse save de memória em nuvem?")) {
         await remove(ref(database, `usuarios/${currentUId}/saves/${saveKey}`));
-        alert("Sachê de progresso deletado!");
+        alert("Arquivo de save deletado!");
     }
 };
 
@@ -394,14 +426,13 @@ window.launchGame = function(system, romUrl, gameTitle) {
     const sanitizedSaveKey = `${system}_${gameTitle.replace(/[^a-zA-Z0-9]/g, "_")}`;
     const fileSaveName = `${gameTitle.replace(/[^a-zA-Z0-9]/g, "_")}.sav`;
 
-    // RESTAURAÇÃO DE SACHÊ VIA REALTIME DATABASE (BASE64)
+    // RESTAURAÇÃO DE SAVE VIA REALTIME DATABASE (BASE64)
     window.EJS_onLogin = async function() {
         if (!currentUId) return;
         try {
             const snapshot = await get(ref(database, `usuarios/${currentUId}/saves/${sanitizedSaveKey}`));
             if (snapshot.exists()) {
                 const base64Data = snapshot.val().dados_base64;
-                // Conversão Base64 de volta para binários ArrayBuffer do WebAssembly
                 const binaryString = atob(base64Data);
                 const len = binaryString.length;
                 const bytes = new Uint8Array(len);
@@ -409,17 +440,16 @@ window.launchGame = function(system, romUrl, gameTitle) {
                 
                 if (typeof window.EJS_LoadState === 'function') {
                     window.EJS_LoadState(bytes);
-                    console.log("Sachê binário restaurado com sucesso do Realtime Database!");
+                    console.log("Save binário restaurado com sucesso do Realtime Database!");
                 }
             }
-        } catch (err) { console.error("Erro ao ler sachê do database:", err); }
+        } catch (err) { console.error("Erro ao ler save do database:", err); }
     };
 
-    // ESCALONAMENTO DE GRAVAÇÃO AUTOMÁTICA EM BASE64 NO BANCO
+    // GRAVAÇÃO AUTOMÁTICA EM BASE64 NO BANCO
     window.EJS_onSaveState = async function(data) {
-        if (!currentUId) { alert("Entre na sua conta para arquivar seus sachês de progresso na nuvem!"); return; }
+        if (!currentUId) { alert("Entre na sua conta para arquivar seus saves de progresso na nuvem!"); return; }
         
-        // Conversão de binários brutos do emulador para String Base64 segura para JSON
         let binary = "";
         const bytes = new Uint8Array(data);
         const len = bytes.byteLength;
@@ -430,10 +460,11 @@ window.launchGame = function(system, romUrl, gameTitle) {
             await set(ref(database, `usuarios/${currentUId}/saves/${sanitizedSaveKey}`), {
                 nome_arquivo: fileSaveName,
                 dados_base64: base64String,
+                updated_at: Date.now(), // mantido compatibilidade de timestamp interna
                 atualizado_em: Date.now()
             });
             alert("Progresso arquivado com sucesso no seu nó do Realtime Database! 💾🔥");
-        } catch (err) { alert("Erro ao gravar sachê no banco: " + err.message); }
+        } catch (err) { alert("Erro ao gravar save no banco: " + err.message); }
     };
 
     const script = document.createElement('script');
