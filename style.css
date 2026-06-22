@@ -181,6 +181,7 @@ input[type="file"] { display: none; }
     text-shadow: 0 1px 2px rgba(0,0,0,0.5);
 }
 .btn-play-now:hover { box-shadow: 0 0 20px var(--neon-purple); transform: scale(1.01); }
+.btn-play-now:disabled { background: #4a4e69; color: var(--text-gray); cursor: not-allowed; box-shadow: none !important; transform: none !important; }
 
 .catalog-container { max-width: 1200px; margin: 50px auto 0 auto; padding: 0 20px; }
 .section-title { margin-bottom: 35px; }
@@ -227,7 +228,6 @@ input[type="file"] { display: none; }
 .game-info h3 { font-size: 1.15rem; margin-bottom: 6px; font-weight: 700; padding-right: 30px; }
 .game-info p { font-size: 0.85rem; color: var(--text-gray); }
 
-/* Botão de Favorito no topo dos Cards (AJUSTADO) */
 .btn-fav-card {
     position: absolute;
     right: 12px;
@@ -249,7 +249,6 @@ input[type="file"] { display: none; }
 .btn-fav-card:hover { transform: scale(1.15); background: #000; border-color: #ff4757; }
 .btn-fav-card.active { color: #ff4757; background: rgba(0, 0, 0, 0.8); border-color: #ff4757; text-shadow: 0 0 8px #ff4757; }
 
-/* Estrutura do Banner de Preview Interno */
 .preview-banner {
     width: 100%;
     height: 250px;
@@ -263,7 +262,6 @@ input[type="file"] { display: none; }
     object-fit: cover;
 }
 
-/* Janelas Modais Customizadas */
 .modal {
     position: fixed;
     top: 0; left: 0; width: 100vw; height: 100vh;
@@ -288,18 +286,15 @@ input[type="file"] { display: none; }
 .auth-switch-text { font-size: 0.85rem; text-align: center; margin-top: 15px; color: var(--text-gray); }
 .auth-switch-text a { color: var(--neon-cyan); text-decoration: none; }
 
-/* Estruturas do Painel Admin */
 .admin-tabs { display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; }
 .admin-tab-body h3 { margin-bottom: 15px; color: var(--neon-cyan); }
 
-/* Tabelas */
 .table-wrapper { width: 100%; overflow-x: auto; margin-top: 15px; background: var(--bg-input); border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); }
 table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; }
 th, td { padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
 th { background: rgba(157, 78, 221, 0.1); color: var(--neon-cyan); font-weight: 600; }
 tr:hover { background: rgba(255,255,255,0.02); }
 
-/* Área do Emulador */
 .emulator-container { max-width: 960px; margin: 30px auto; padding: 0 20px; }
 .emulator-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
 .emulator-header h2 { font-size: 1.4rem; color: var(--neon-cyan); }
@@ -315,7 +310,6 @@ tr:hover { background: rgba(255,255,255,0.02); }
 .btn-sm:hover { background: #ff4757; color: white; }
 .hidden { display: none !important; }
 
-/* Ajustes Mobile Finos */
 @media (max-width: 768px) {
     .navbar { flex-direction: column; gap: 15px; padding: 15px; text-align: center; }
     .nav-links { width: 100%; justify-content: center; flex-wrap: wrap; }
