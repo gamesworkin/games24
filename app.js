@@ -21,7 +21,7 @@ let currentUser = null;
 let currentUId = null;
 let activeBlobUrl = null; 
 let cachedGames = {};
-let selectedPreviewGameId = null; // Guarda o jogo focado no modal de preview
+let selectedPreviewGameId = null;
 
 // Captura de Elementos Gerais da Interface
 const btnOpenAuth = document.getElementById('btn-open-auth');
@@ -46,6 +46,10 @@ const previewSystemBadge = document.getElementById('preview-system-badge');
 const previewTitle = document.getElementById('preview-title');
 const previewDesc = document.getElementById('preview-desc');
 const btnStartPreviewGame = document.getElementById('btn-start-preview-game');
+
+// Botões de Execução com Mutação de Texto
+const btnExecuteLogin = document.getElementById('btn-execute-login');
+const btnExecuteRegister = document.getElementById('btn-execute-register');
 
 // Controle de Telas Internas dos Modais de Autenticação
 const authLoginSec = document.getElementById('auth-login-section');
@@ -100,8 +104,26 @@ onAuthStateChanged(auth, async (user) => {
         if (btnAdminPanel) btnAdminPanel.classList.add('hidden');
         if (btnOpenProfile) btnOpenProfile.classList.add('hidden');
         if (playerDashboard) playerDashboard.classList.add('hidden');
+        
+        // Retorna o formulário e os botões ao estado inicial vazio e disponível
+        resetAuthFormStates();
     }
 });
+
+// Limpa todos os campos e estados ao deslogar ou trocar de aba
+function resetAuthFormStates() {
+    const inputs = document.querySelectorAll('#modal-auth input');
+    inputs.forEach(input => input.value = "");
+    
+    if (btnExecuteLogin) {
+        btnExecuteLogin.textContent = "Entrar ⚡";
+        btnExecuteLogin.disabled = false;
+    }
+    if (btnExecuteRegister) {
+        btnExecuteRegister.textContent = "Finalizar Cadastro 🎮";
+        btnExecuteRegister.disabled = false;
+    }
+}
 
 // Carrega os dados do usuário nos inputs dentro do Modal de Perfil
 async function loadProfileDataToFields() {
@@ -128,20 +150,35 @@ if (document.getElementById('btn-save-profile')) {
 
         try {
             await update(ref(database, `usuarios/${currentUId}/perfil`), { nome, sobrenome, cidade });
-            alert("Perfil atualizado com sucesso!");
+            alert("Perfil updated com sucesso!");
             if (userName) userName.textContent = nome;
             modalProfile.classList.add('hidden');
         } catch (err) { alert("Falha ao salvar: " + err.message); }
     });
 }
 
-// Abertura e Fechamento de Janelas Modais (Incluindo os novos elementos)
-if (btnOpenAuth) btnOpenAuth.addEventListener('click', () => { modalAuth.classList.remove('hidden'); authLoginSec.classList.remove('hidden'); authRegisterSec.classList.add('hidden'); });
+// Abertura e Fechamento de Janelas Modais
+if (btnOpenAuth) btnOpenAuth.addEventListener('click', () => { modalAuth.classList.remove('hidden'); authLoginSec.classList.remove('hidden'); authRegisterSec.classList.add('hidden'); resetAuthFormStates(); });
 if (document.getElementById('close-auth-modal')) document.getElementById('close-auth-modal').addEventListener('click', () => modalAuth.classList.add('hidden'));
 if (document.getElementById('link-forgot-password')) document.getElementById('link-forgot-password').addEventListener('click', (e) => { e.preventDefault(); modalAuth.classList.add('hidden'); modalForgot.classList.remove('hidden'); });
 if (document.getElementById('close-forgot-modal')) document.getElementById('close-forgot-modal').addEventListener('click', () => modalForgot.classList.add('hidden'));
-if (document.getElementById('link-to-register')) document.getElementById('link-to-register').addEventListener('click', (e) => { e.preventDefault(); authLoginSec.classList.add('hidden'); authRegisterSec.classList.remove('hidden'); });
-if (document.getElementById('link-to-login')) document.getElementById('link-to-login').addEventListener('click', (e) => { e.preventDefault(); authRegisterSec.classList.add('hidden'); authLoginSec.classList.remove('hidden'); });
+
+if (document.getElementById('link-to-register')) {
+    document.getElementById('link-to-register').addEventListener('click', (e) => { 
+        e.preventDefault(); 
+        authLoginSec.classList.add('hidden'); 
+        authRegisterSec.classList.remove('hidden'); 
+        resetAuthFormStates();
+    });
+}
+if (document.getElementById('link-to-login')) {
+    document.getElementById('link-to-login').addEventListener('click', (e) => { 
+        e.preventDefault(); 
+        authRegisterSec.classList.add('hidden'); 
+        authLoginSec.classList.remove('hidden'); 
+        resetAuthFormStates();
+    });
+}
 
 if (btnAdminPanel) btnAdminPanel.addEventListener('click', () => { modalAdmin.classList.remove('hidden'); loadAdminUsersTable(); });
 if (document.getElementById('close-admin-modal')) document.getElementById('close-admin-modal').addEventListener('click', () => modalAdmin.classList.add('hidden'));
@@ -151,41 +188,104 @@ if (document.getElementById('close-profile-modal')) document.getElementById('clo
 
 if (document.getElementById('close-preview-modal')) document.getElementById('close-preview-modal').addEventListener('click', () => modalGamePreview.classList.add('hidden'));
 
+// --- SISTEMA INTEGRAÇÃO KEYDOWN (ENTER) PARA FLUXO UX DE LOGIN ---
+document.querySelectorAll('.next-on-enter').forEach(input => {
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            // Localiza todos os inputs visíveis dentro do modal ativo
+            const visibleInputs = Array.from(document.querySelectorAll('#modal-auth .input-style:not((.hidden *))')).filter(i => i.getBoundingClientRect().width > 0);
+            const index = visibleInputs.indexOf(e.target);
+            if (index > -1 && visibleInputs[index + 1]) {
+                visibleInputs[index + 1].focus();
+            }
+        }
+    });
+});
+
+// Acionamento final por Enter na tela de Login
+const loginPasswordInput = document.getElementById('login-senha');
+if (loginPasswordInput) {
+    loginPasswordInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            processLoginAction();
+        }
+    });
+}
+
+// Acionamento final por Enter na tela de Cadastro
+const registerPasswordInput = document.getElementById('reg-senha');
+if (registerPasswordInput) {
+    registerPasswordInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            processRegisterAction();
+        }
+    });
+}
+
 // Fluxos de Autenticação Tradicional e Google Provider
+if (btnExecuteLogin) {
+    btnExecuteLogin.addEventListener('click', () => processLoginAction());
+}
+
+if (btnExecuteRegister) {
+    btnExecuteRegister.addEventListener('click', () => processRegisterAction());
+}
+
+async function processLoginAction() {
+    const email = document.getElementById('login-email').value.trim();
+    const senha = loginPasswordInput.value.trim();
+    
+    if(!email || !senha) { alert("Preencha todos os campos para entrar!"); return; }
+    
+    // Mutação visual para estado de carregamento
+    btnExecuteLogin.textContent = "Logando...";
+    btnExecuteLogin.disabled = true;
+
+    try { 
+        await signInWithEmailAndPassword(auth, email, senha); 
+        modalAuth.classList.add('hidden'); 
+    } 
+    catch (err) { 
+        alert("Acesso negado: " + err.message); 
+        btnExecuteLogin.textContent = "Entrar ⚡";
+        btnExecuteLogin.disabled = false;
+    }
+}
+
+async function processRegisterAction() {
+    const nome = document.getElementById('reg-nome').value.trim();
+    const sobrenome = document.getElementById('reg-sobrenome').value.trim();
+    const cidade = document.getElementById('reg-cidade').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const senha = registerPasswordInput.value.trim();
+
+    if(!nome || !sobrenome || !cidade || !email || !senha) { alert("Preencha todos os campos!"); return; }
+
+    // Mutação visual para estado de carregamento
+    btnExecuteRegister.textContent = "Cadastrando...";
+    btnExecuteRegister.disabled = true;
+
+    try {
+        const credential = await createUserWithEmailAndPassword(auth, email, senha);
+        await set(ref(database, `usuarios/${credential.user.uid}/perfil`), {
+            nome, sobrenome, cidade, email, role: "user", solicitou_exclusao: false
+        });
+        alert("Conta criada com sucesso!");
+        modalAuth.classList.add('hidden');
+    } catch (err) { 
+        alert("Erro ao cadastrar: " + err.message); 
+        btnExecuteRegister.textContent = "Finalizar Cadastro 🎮";
+        btnExecuteRegister.disabled = false;
+    }
+}
+
 if (document.getElementById('btn-login-google')) {
     document.getElementById('btn-login-google').addEventListener('click', async () => {
         try { await signInWithPopup(auth, provider); modalAuth.classList.add('hidden'); } 
         catch (err) { alert("Erro Google Auth: " + err.message); }
-    });
-}
-
-if (document.getElementById('btn-execute-register')) {
-    document.getElementById('btn-execute-register').addEventListener('click', async () => {
-        const nome = document.getElementById('reg-nome').value.trim();
-        const sobrenome = document.getElementById('reg-sobrenome').value.trim();
-        const cidade = document.getElementById('reg-cidade').value.trim();
-        const email = document.getElementById('reg-email').value.trim();
-        const senha = document.getElementById('reg-senha').value.trim();
-
-        if(!nome || !sobrenome || !cidade || !email || !senha) { alert("Preencha todos os campos!"); return; }
-
-        try {
-            const credential = await createUserWithEmailAndPassword(auth, email, senha);
-            await set(ref(database, `usuarios/${credential.user.uid}/perfil`), {
-                nome, sobrenome, cidade, email, role: "user", solicitou_exclusao: false
-            });
-            alert("Conta criada com sucesso!");
-            modalAuth.classList.add('hidden');
-        } catch (err) { alert("Erro ao cadastrar: " + err.message); }
-    });
-}
-
-if (document.getElementById('btn-execute-login')) {
-    document.getElementById('btn-execute-login').addEventListener('click', async () => {
-        const email = document.getElementById('login-email').value.trim();
-        const senha = document.getElementById('login-senha').value.trim();
-        try { await signInWithEmailAndPassword(auth, email, senha); modalAuth.classList.add('hidden'); } 
-        catch (err) { alert("Acesso negado: " + err.message); }
     });
 }
 
@@ -245,7 +345,6 @@ onValue(ref(database, 'jogos'), (snapshot) => {
     updateFavoriteButtonsVisuals();
 });
 
-// Fluxo de abertura do Modal de Detalhes (Preview) antes do play definitivo
 window.openGamePreview = function(gameId) {
     const jogo = cachedGames[gameId];
     if (!jogo) return;
@@ -259,7 +358,6 @@ window.openGamePreview = function(gameId) {
     if (modalGamePreview) modalGamePreview.classList.remove('hidden');
 };
 
-// Disparador de execução de jogo de dentro do Modal de Preview
 if (btnStartPreviewGame) {
     btnStartPreviewGame.addEventListener('click', () => {
         if (!selectedPreviewGameId || !cachedGames[selectedPreviewGameId]) return;
@@ -269,7 +367,6 @@ if (btnStartPreviewGame) {
     });
 }
 
-// Escuta de clicks globais direcionados para o botão flutuante de favoritos dos cards
 document.addEventListener('click', async (e) => {
     if (e.target && e.target.classList.contains('btn-fav-card')) {
         e.stopPropagation();
@@ -295,7 +392,7 @@ function updateFavoriteButtonsVisuals() {
     });
 }
 
-// Painéis de Controle e Observação do Dashboard Pessoal do Jogador Logado
+// Painéis de Controle e Observação do Dashboard Pessoal
 function setupPlayerDashboardObservers() {
     onValue(ref(database, `usuarios/${currentUId}/favoritos`), (snapshot) => {
         const favGrid = document.getElementById('player-favorites-grid');
@@ -438,7 +535,7 @@ window.executePurgeUserByAdmin = async function(userUid) {
     }
 };
 
-// --- MOTOR DE EMBED SYNC DO EMULADOR COM BASE64 (Mapeado com EmulatorJS) ---
+// --- MOTOR DE EMBED SYNC DO EMULADOR ---
 window.launchGame = function(system, romUrl, gameTitle) {
     if (document.getElementById('catalog-screen')) document.getElementById('catalog-screen').classList.add('hidden');
     const emuScreen = document.getElementById('emulator-screen');
@@ -462,7 +559,6 @@ window.launchGame = function(system, romUrl, gameTitle) {
     const sanitizedSaveKey = `${system}_${gameTitle.replace(/[^a-zA-Z0-9]/g, "_")}`;
     const fileSaveName = `${gameTitle.replace(/[^a-zA-Z0-9]/g, "_")}.sav`;
 
-    // Restauração de Saves de Memória em Nuvem do Realtime Database
     window.EJS_onLogin = async function() {
         if (!currentUId) return;
         try {
@@ -479,12 +575,11 @@ window.launchGame = function(system, romUrl, gameTitle) {
                     console.log("Progresso binário injetado com sucesso!");
                 }
             }
-        } catch (err) { console.error("Erro na leitura de save estrutural:", err); }
+        } catch (err) { console.error("Erro na leitura de save:", err); }
     };
 
-    // Callback de salvamento automático interceptado e convertido para String Base64
     window.EJS_onSaveState = async function(data) {
-        if (!currentUId) { alert("Conecte-se em uma conta para sincronizar o progresso na nuvem!"); return; }
+        if (!currentUId) { alert("Conecte-se em uma conta para sincronizar o progresso!"); return; }
         
         let binary = "";
         const bytes = new Uint8Array(data);
@@ -509,7 +604,6 @@ window.launchGame = function(system, romUrl, gameTitle) {
     document.body.appendChild(script);
 };
 
-// Processador de Uploads para Arquivos de Rom Locais
 window.uploadAndPlay = function() {
     const fileInput = document.getElementById('rom-upload');
     let system = document.getElementById('system-select') ? document.getElementById('system-select').value : 'nes';
@@ -519,7 +613,6 @@ window.uploadAndPlay = function() {
     const file = fileInput.files[0];
     const extension = file.name.split('.').pop().toLowerCase();
 
-    // Normalizações extras automáticas de extensões para Cores específicos do EmulatorJS
     if (extension === 'smd' || extension === 'gen' || extension === 'md') system = 'segaMD'; 
     else if (extension === 'sms') system = 'segaMS';
     else if (extension === 'gg') system = 'gg';
