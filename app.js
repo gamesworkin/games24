@@ -72,16 +72,17 @@ onAuthStateChanged(auth, async (user) => {
         currentUser = user;
         currentUId = user.uid;
         
+        // CORREÇÃO CRÍTICA: Verifica se ele está marcado como banido no banco de dados antes de carregar o app
+        const snapshot = await get(ref(database, `usuarios/${currentUId}/perfil`));
+        if (snapshot.exists() && snapshot.val().banido === true) {
+            alert("🔒 Acesso Negado! Esta conta foi banida permanentemente pelo administrador.");
+            signOut(auth); // Expulsa o usuário imediatamente do Firebase Auth do cliente
+            return;
+        }
+
         if (btnOpenAuth) btnOpenAuth.classList.add('hidden');
         if (userInfo) userInfo.classList.remove('hidden');
         if (userAvatar) userAvatar.src = user.photoURL || "https://win98icon.org/styles/asset/windows98/v1/user_computer-0.png";
-        
-        const snapshot = await get(ref(database, `usuarios/${currentUId}/perfil`));
-        if (snapshot.exists() && snapshot.val().banido === true) {
-            alert("Esta conta foi desativada e removida pelo administrador.");
-            signOut(auth);
-            return;
-        }
 
         if (user.email === "admin@admin.com") {
             if (userName) userName.textContent = "Diretor Admin";
@@ -101,7 +102,8 @@ onAuthStateChanged(auth, async (user) => {
                     cidade: "Não Informada",
                     email: user.email,
                     role: "user",
-                    solicitou_exclusao: false
+                    solicitou_exclusao: false,
+                    banido: false // Inicializa explicitamente como não banido
                 });
             }
             loadProfileDataToFields();
@@ -116,7 +118,6 @@ onAuthStateChanged(auth, async (user) => {
         if (btnOpenProfile) btnOpenProfile.classList.add('hidden');
         if (playerDashboard) playerDashboard.classList.add('hidden');
         
-        // Retorna o formulário e os botões ao estado inicial vazio e disponível
         resetAuthFormStates();
     }
 });
@@ -204,7 +205,6 @@ document.querySelectorAll('#modal-auth .next-on-enter').forEach(input => {
     input.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
-            // Localiza todos os inputs visíveis dentro da seção ativa do modal
             const activeSection = authLoginSec.classList.contains('hidden') ? authRegisterSec : authLoginSec;
             const visibleInputs = Array.from(activeSection.querySelectorAll('.input-style'));
             const index = visibleInputs.indexOf(e.target);
@@ -252,7 +252,6 @@ async function processLoginAction() {
     
     if(!email || !senha) { alert("Preencha todos os campos para entrar!"); return; }
     
-    // Mutação visual para estado de carregamento
     btnExecuteLogin.textContent = "Logando...";
     btnExecuteLogin.disabled = true;
 
@@ -276,7 +275,6 @@ async function processRegisterAction() {
 
     if(!nome || !sobrenome || !cidade || !email || !senha) { alert("Preencha todos os campos!"); return; }
 
-    // --- VALIDAÇÃO DA WHITELIST DE EMAILS ---
     const emailParts = email.split('@');
     if (emailParts.length !== 2) {
         alert("Insira um endereço de e-mail válido!");
@@ -289,14 +287,13 @@ async function processRegisterAction() {
         return;
     }
 
-    // Mutação visual para estado de carregamento
     btnExecuteRegister.textContent = "Cadastrando...";
     btnExecuteRegister.disabled = true;
 
     try {
         const credential = await createUserWithEmailAndPassword(auth, email, senha);
         await set(ref(database, `usuarios/${credential.user.uid}/perfil`), {
-            nome, sobrenome, cidade, email, role: "user", solicitou_exclusao: false
+            nome, sobrenome, cidade, email, role: "user", solicitou_exclusao: false, banido: false
         });
         alert("Conta criada com sucesso!");
         modalAuth.classList.add('hidden');
@@ -525,6 +522,7 @@ if (document.getElementById('btn-save-new-game')) {
     });
 }
 
+// CORREÇÃO DA TABELA DO ADMIN: Oculta instantaneamente usuários que possuem a flag "banido: true"
 async function loadAdminUsersTable() {
     const tableBody = document.getElementById('admin-users-table-body');
     if (!tableBody) return;
@@ -533,10 +531,16 @@ async function loadAdminUsersTable() {
     const snapshot = await get(ref(database, 'usuarios'));
     const usuarios = snapshot.val() || {};
 
+    let totalVisiveis = 0;
+
     for (let uid in usuarios) {
         const p = usuarios[uid].perfil;
         if (!p || p.email === "admin@admin.com") continue;
+        
+        // Se o usuário foi banido, pula ele para sumir totalmente da lista do admin
+        if (p.banido === true) continue;
 
+        totalVisiveis++;
         const statusExclusao = p.solicitou_exclusao ? `<span style="color:#ff4757; font-weight:bold;">⚠️ SOLICITADA</span>` : "Nenhuma";
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -548,15 +552,34 @@ async function loadAdminUsersTable() {
         `;
         tableBody.appendChild(tr);
     }
+
+    if (totalVisiveis === 0) {
+        tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--text-gray);">Nenhum usuário ativo registrado no sistema.</td></tr>`;
+    }
 }
 
+// ADIÇÃO DA REGRA DE BANIMENTO E LIMPEZA COMPLETA DE DADOS NA NUVEM
 window.executePurgeUserByAdmin = async function(userUid) {
-    if (confirm("Confirmar banimento definitivo e eliminação completa do nó?")) {
-        await update(ref(database, `usuarios/${userUid}/perfil`), { banido: true, solicitou_exclusao: false });
-        await remove(ref(database, `usuarios/${userUid}/favoritos`));
-        await remove(ref(database, `usuarios/${userUid}/saves`));
-        alert("Usuário limpo e banido.");
-        loadAdminUsersTable();
+    if (confirm("Confirmar banimento definitivo? O usuário desaparecerá da lista, terá seus dados deletados e será bloqueado de entrar no sistema imediatamente.")) {
+        try {
+            // Mantém apenas o e-mail e altera o status para banido no banco para servir de barreira perpétua
+            await update(ref(database, `usuarios/${userUid}/perfil`), { 
+                banido: true, 
+                solicitou_exclusao: false,
+                nome: "Usuário",
+                sobrenome: "Banido",
+                cidade: "Removido"
+            });
+            
+            // Deleta completamente os dados periféricos dele
+            await remove(ref(database, `usuarios/${userUid}/favoritos`));
+            await remove(ref(database, `usuarios/${userUid}/saves`));
+            
+            alert("Usuário banido e dados removidos com sucesso!");
+            loadAdminUsersTable(); // Recarrega a tabela onde ele já não vai mais aparecer
+        } catch (err) {
+            alert("Erro ao executar ação: " + err.message);
+        }
     }
 };
 
