@@ -187,13 +187,38 @@
                 <h2 style="margin:0;">🕹️ Área de Dados do Jogador</h2>
                 <button id="btn-request-delete-account" class="btn-sm">Solicitar Exclusão da Conta</button>
             </div>
+
+            <div class="profile-edit-box" style="margin-bottom: 35px; background: var(--bg-input); padding: 20px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                <h3 style="color: var(--neon-cyan); margin-bottom: 15px; font-size: 1.1rem;">👤 Editar Meu Perfil</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Nome:</label>
+                        <input type="text" id="edit-nome" class="input-style">
+                    </div>
+                    <div class="form-group">
+                        <label>Sobrenome:</label>
+                        <input type="text" id="edit-sobrenome" class="input-style">
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Cidade:</label>
+                        <input type="text" id="edit-cidade" class="input-style">
+                    </div>
+                    <div class="form-group">
+                        <label>E-mail (Não alterável):</label>
+                        <input type="text" id="edit-email" class="input-style" readonly style="opacity: 0.5; cursor: not-allowed;">
+                    </div>
+                </div>
+                <button id="btn-save-profile" class="btn-home" style="margin-top: 10px; background: var(--neon-cyan); color: #000; border-color: var(--neon-cyan); font-weight: bold; width: auto; display: inline-block;">Salvar Alterações</button>
+            </div>
             
             <h3 style="color: var(--neon-cyan); margin-bottom: 10px;">⭐ Meus Favoritos</h3>
             <div id="player-favorites-grid" class="grid-games" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px;">
                 <p style="color: var(--text-gray); font-size: 0.9rem;">Nenhum jogo favoritado ainda.</p>
             </div>
 
-            <h3 style="color: var(--neon-cyan); margin-bottom: 10px;">💾 Gerenciador de Sachês (Saves em Nuvem Base64)</h3>
+            <h3 style="color: var(--neon-cyan); margin-bottom: 10px;">💾 Gerenciador de Saves (Armazenamento em Nuvem Base64)</h3>
             <div class="table-wrapper">
                 <table>
                     <thead>
@@ -204,7 +229,7 @@
                         </tr>
                     </thead>
                     <tbody id="player-saves-table-body">
-                        <tr><td colspan="3" style="text-align:center; color: var(--text-gray);">Nenhum sachê salvo no banco.</td></tr>
+                        <tr><td colspan="3" style="text-align:center; color: var(--text-gray);">Nenhum save armazenado no banco.</td></tr>
                     </tbody>
                 </table>
             </div>
