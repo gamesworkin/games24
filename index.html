@@ -33,6 +33,7 @@
             <div id="user-info" class="user-profile hidden">
                 <img id="user-avatar" src="" alt="Avatar">
                 <span id="user-name"></span>
+                <button id="btn-open-profile" class="btn-home" style="background: var(--bg-card); border-color: var(--neon-cyan); color: var(--neon-cyan);">👤 Perfil</button>
                 <button id="btn-admin-panel" class="btn-home hidden" style="background: var(--neon-cyan); color: #000; border-color: var(--neon-cyan);">Painel Admin</button>
                 <button id="btn-logout" class="btn-sm">Sair</button>
             </div>
@@ -114,6 +115,55 @@
         </div>
     </div>
 
+    <div id="modal-profile" class="modal hidden">
+        <div class="modal-content" style="max-width: 550px;">
+            <span class="close-modal" id="close-profile-modal">✖</span>
+            <h2>👤 Configurações do Meu Perfil</h2>
+            <p style="color: var(--text-gray); font-size: 0.85rem; margin-bottom: 20px;">Atualize suas informações de exibição na plataforma.</p>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Nome:</label>
+                    <input type="text" id="edit-nome" class="input-style">
+                </div>
+                <div class="form-group">
+                    <label>Sobrenome:</label>
+                    <input type="text" id="edit-sobrenome" class="input-style">
+                </div>
+            </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Cidade:</label>
+                    <input type="text" id="edit-cidade" class="input-style">
+                </div>
+                <div class="form-group">
+                    <label>E-mail (Não alterável):</label>
+                    <input type="text" id="edit-email" class="input-style" readonly style="opacity: 0.5; cursor: not-allowed;">
+                </div>
+            </div>
+            
+            <button id="btn-save-profile" class="btn-play-now" style="margin-top: 15px;">Salvar Alterações</button>
+            <hr style="border-color: rgba(255,255,255,0.05); margin: 20px 0;">
+            <button id="btn-request-delete-account" class="btn-sm" style="width: 100%; display: block; text-align: center;">Solicitar Exclusão Definitiva da Conta</button>
+        </div>
+    </div>
+
+    <div id="modal-game-preview" class="modal hidden">
+        <div class="modal-content" style="max-width: 600px; padding: 0; overflow: hidden; border-color: var(--neon-cyan);">
+            <div class="preview-banner">
+                <img id="preview-cover" src="" alt="Capa do Jogo">
+                <span class="close-modal" id="close-preview-modal" style="color: white; background: rgba(0,0,0,0.6); width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%; top: 15px; right: 15px;">✖</span>
+            </div>
+            <div style="padding: 25px;">
+                <span id="preview-system-badge" class="badge-system" style="position: static; display: inline-block; margin-bottom: 10px;">CONSOLE</span>
+                <h2 id="preview-title" style="margin-bottom: 10px; font-size: 1.8rem; text-shadow: 0 0 10px rgba(0,245,214,0.2);">Título do Jogo</h2>
+                <p id="preview-desc" style="color: var(--text-gray); font-size: 0.95rem; line-height: 1.5; margin-bottom: 25px; min-height: 60px;">Sem descrição disponível para este título.</p>
+                
+                <button id="btn-start-preview-game" class="btn-play-now" style="font-size: 1.1rem; padding: 16px;">Iniciar Game ⚡</button>
+            </div>
+        </div>
+    </div>
+
     <div id="modal-admin" class="modal hidden">
         <div class="modal-content" style="max-width: 850px;">
             <span class="close-modal" id="close-admin-modal">✖</span>
@@ -133,9 +183,23 @@
                             <option value="nes">Nintendo (NES)</option>
                             <option value="snes">Super Nintendo (SNES)</option>
                             <option value="gba">Game Boy Advance (GBA)</option>
-                            <option value="segaMD">Sega Mega Drive</option>
-                            <option value="n64">Nintendo 64</option>
+                            <option value="gbc">Game Boy Color (GBC)</option>
+                            <option value="gb">Game Boy Classic (GB)</option>
+                            <option value="segaMD">Sega Mega Drive / Genesis</option>
+                            <option value="segaMS">Sega Master System</option>
+                            <option value="gg">Sega Game Gear</option>
+                            <option value="n64">Nintendo 64 (N64)</option>
                             <option value="ps1">PlayStation 1 (PSX)</option>
+                            <option value="atari2600">Atari 2600</option>
+                            <option value="atari7800">Atari 7800</option>
+                            <option value="fds">Family Computer Disk System</option>
+                            <option value="lynx">Atari Lynx</option>
+                            <option value="ngp">Neo Geo Pocket</option>
+                            <option value="ngpc">Neo Geo Pocket Color</option>
+                            <option value="wswan">WonderSwan</option>
+                            <option value="wswanc">WonderSwan Color</option>
+                            <option value="vb">Virtual Boy</option>
+                            <option value="pkmini">Pokémon Mini</option>
                         </select>
                     </div>
                 </div>
@@ -183,37 +247,11 @@
     <div class="main-content" id="catalog-screen">
         
         <section id="player-dashboard-section" class="upload-section hidden" style="border-style: solid; text-align: left;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--neon-purple); padding-bottom: 10px;">
+            <div style="margin-bottom: 20px; border-bottom: 1px solid var(--neon-purple); padding-bottom: 10px;">
                 <h2 style="margin:0;">🕹️ Área de Dados do Jogador</h2>
-                <button id="btn-request-delete-account" class="btn-sm">Solicitar Exclusão da Conta</button>
-            </div>
-
-            <div class="profile-edit-box" style="margin-bottom: 35px; background: var(--bg-input); padding: 20px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
-                <h3 style="color: var(--neon-cyan); margin-bottom: 15px; font-size: 1.1rem;">👤 Editar Meu Perfil</h3>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Nome:</label>
-                        <input type="text" id="edit-nome" class="input-style">
-                    </div>
-                    <div class="form-group">
-                        <label>Sobrenome:</label>
-                        <input type="text" id="edit-sobrenome" class="input-style">
-                    </div>
-                </div>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Cidade:</label>
-                        <input type="text" id="edit-cidade" class="input-style">
-                    </div>
-                    <div class="form-group">
-                        <label>E-mail (Não alterável):</label>
-                        <input type="text" id="edit-email" class="input-style" readonly style="opacity: 0.5; cursor: not-allowed;">
-                    </div>
-                </div>
-                <button id="btn-save-profile" class="btn-home" style="margin-top: 10px; background: var(--neon-cyan); color: #000; border-color: var(--neon-cyan); font-weight: bold; width: auto; display: inline-block;">Salvar Alterações</button>
             </div>
             
-            <h3 style="color: var(--neon-cyan); margin-bottom: 10px;">⭐ Meus Favoritos</h3>
+            <h3 style="color: var(--neon-cyan); margin-bottom: 15px;">⭐ Minha Lista de Favoritos</h3>
             <div id="player-favorites-grid" class="grid-games" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px;">
                 <p style="color: var(--text-gray); font-size: 0.9rem;">Nenhum jogo favoritado ainda.</p>
             </div>
@@ -237,7 +275,7 @@
         
         <section class="upload-section">
             <h2>🕹️ Carregar sua ROM Local</h2>
-            <p>Selecione o console, escolha a ROM no seu dispositivo e jogue instantaneamente.</p>
+            <p>Selecione o console desejado, carregue o arquivo de ROM direto do seu dispositivo e execute em tempo real.</p>
             <div class="upload-box">
                 <div class="input-group">
                     <label for="system-select">Console:</label>
@@ -245,7 +283,14 @@
                         <option value="nes">Nintendo (NES)</option>
                         <option value="snes">Super Nintendo (SNES)</option>
                         <option value="gba">Game Boy Advance (GBA)</option>
+                        <option value="gbc">Game Boy Color (GBC)</option>
+                        <option value="gb">Game Boy Classic (GB)</option>
                         <option value="segaMD">Sega Mega Drive / Genesis</option>
+                        <option value="segaMS">Sega Master System</option>
+                        <option value="gg">Sega Game Gear</option>
+                        <option value="n64">Nintendo 64 (N64)</option>
+                        <option value="ps1">PlayStation 1 (PSX)</option>
+                        <option value="atari2600">Atari 2600</option>
                     </select>
                 </div>
                 
@@ -253,7 +298,7 @@
                     <label for="rom-upload" class="custom-file-upload">
                         📁 Escolher Arquivo ROM
                     </label>
-                    <input type="file" id="rom-upload" accept=".nes,.sfc,.smc,.gba,.gbc,.gb,.bin,.md,.smd,.sms">
+                    <input type="file" id="rom-upload" accept=".nes,.sfc,.smc,.gba,.gbc,.gb,.bin,.md,.smd,.sms,.z64,.v64,.n64,.img,.bin,.iso,.a26">
                     <span id="file-name-display">Nenhum arquivo selecionado</span>
                 </div>
                 
